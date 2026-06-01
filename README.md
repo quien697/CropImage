@@ -111,7 +111,6 @@ CropImage/
 │     ├─ Views/          # CropImageView, CropMaskView, CropShapeView
 │     ├─ Utilities/      # CropGeometry (pure geometry helpers)
 │     └─ Previews/       # Preview support
-├─ CropImageDemo/        # Example app
 └─ Screenshots/
 ```
 
@@ -128,10 +127,14 @@ CropImage/
 
 ## 🚀 Getting Started
 
-A runnable example app lives in `CropImageDemo/`. It demonstrates the full `PhotosPicker → CropImageView → result` flow.
+Add the package to your project (see [Installation](#-installation)) and present `CropImageView` (see [Usage](#-usage)).
 
-1. Open `CropImageDemo/CropImageDemo.xcodeproj` in Xcode
-2. Build & run on simulator or device
+A runnable example app is available on the [`with-demo`](https://github.com/quien697/CropImage/tree/with-demo) branch, demonstrating the full `PhotosPicker → CropImageView → result` flow:
+
+```bash
+git checkout with-demo
+open CropImageDemo/CropImageDemo.xcodeproj
+```
 
 
 
