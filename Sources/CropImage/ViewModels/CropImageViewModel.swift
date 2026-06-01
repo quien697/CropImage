@@ -8,15 +8,12 @@
 import SwiftUI
 
 /// Owns the interactive crop state (scale + offset), the gesture math, and the
-/// final image rendering. Keeping this out of the view makes the behavior
-/// reusable and testable as the library grows.
+/// final image rendering. It holds only mutable gesture state; the image and
+/// crop shape are passed in by the view so they always reflect the latest
+/// inputs (e.g. an image that loads asynchronously).
 @MainActor
 @Observable
 final class CropImageViewModel {
-  // MARK: - Inputs
-  let image: UIImage?
-  let cropShape: CropShape
-
   // MARK: - Live gesture state
   var scale: CGFloat = 1.0
   var offset: CGSize = .zero
@@ -24,12 +21,6 @@ final class CropImageViewModel {
   // MARK: - Gesture bookkeeping
   private var lastScale: CGFloat = 0
   private var lastOffset: CGSize = .zero
-
-  // MARK: - Init
-  init(image: UIImage?, cropShape: CropShape) {
-    self.image = image
-    self.cropShape = cropShape
-  }
 
   // MARK: - Drag
   func dragChanged(_ value: DragGesture.Value) {
@@ -39,8 +30,8 @@ final class CropImageViewModel {
     )
   }
 
-  func dragEnded(cropSize: CGSize, containerSize: CGSize) {
-    let rendered = renderedSize(in: containerSize)
+  func dragEnded(imageSize: CGSize?, cropSize: CGSize, containerSize: CGSize) {
+    let rendered = renderedSize(imageSize: imageSize, in: containerSize)
     let clamped = CropGeometry.clampOffset(
       offset,
       scale: scale,
@@ -58,8 +49,8 @@ final class CropImageViewModel {
     scale = value + lastScale
   }
 
-  func magnificationEnded(cropSize: CGSize, containerSize: CGSize) {
-    let rendered = renderedSize(in: containerSize)
+  func magnificationEnded(imageSize: CGSize?, cropSize: CGSize, containerSize: CGSize) {
+    let rendered = renderedSize(imageSize: imageSize, in: containerSize)
     let minScale = max(
       cropSize.width / rendered.width,
       cropSize.height / rendered.height
@@ -81,17 +72,17 @@ final class CropImageViewModel {
 
   // MARK: - Rendering
   /// The size `scaledToFill` renders the image at inside `containerSize`.
-  func renderedSize(in containerSize: CGSize) -> CGSize {
-    guard let image else { return containerSize }
+  func renderedSize(imageSize: CGSize?, in containerSize: CGSize) -> CGSize {
+    guard let imageSize else { return containerSize }
     return CropGeometry.renderedSize(
-      imageSize: image.size,
+      imageSize: imageSize,
       containerSize: containerSize
     )
   }
 
   /// Produces the cropped image for the current scale/offset, or `nil` if there
   /// is no image or rendering fails.
-  func crop(cropSize: CGSize, containerSize: CGSize) -> UIImage? {
+  func crop(image: UIImage?, cropSize: CGSize, containerSize: CGSize) -> UIImage? {
     guard let image else { return nil }
 
     let view = Image(uiImage: image)

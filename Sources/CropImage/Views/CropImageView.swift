@@ -14,9 +14,11 @@ public struct CropImageView: View {
   @Environment(\.dismiss) private var dismiss
 
   // MARK: - State
-  @State private var viewModel: CropImageViewModel
+  @State private var viewModel = CropImageViewModel()
 
   // MARK: - Properties
+  private let image: UIImage?
+  private let cropShape: CropShape
   private let onCrop: (UIImage?) -> Void
 
   // MARK: - Init
@@ -25,9 +27,8 @@ public struct CropImageView: View {
     cropShape: CropShape,
     onCrop: @escaping (UIImage?) -> Void
   ) {
-    _viewModel = State(
-      initialValue: CropImageViewModel(image: image, cropShape: cropShape)
-    )
+    self.image = image
+    self.cropShape = cropShape
     self.onCrop = onCrop
   }
 
@@ -43,7 +44,7 @@ public struct CropImageView: View {
           Spacer()
 
           ZStack {
-            if let image = viewModel.image {
+            if let image {
               Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
@@ -60,7 +61,7 @@ public struct CropImageView: View {
                 )
             }
 
-            CropMaskView(shape: viewModel.cropShape, cropSize: cropSize)
+            CropMaskView(shape: cropShape, cropSize: cropSize)
           }  // ZStack
           .frame(width: geo.size.width, height: geo.size.height)
           .clipped()
@@ -78,7 +79,11 @@ public struct CropImageView: View {
           ToolbarItem(placement: .confirmationAction) {
             Button(role: .confirm) {
               onCrop(
-                viewModel.crop(cropSize: cropSize, containerSize: containerSize)
+                viewModel.crop(
+                  image: image,
+                  cropSize: cropSize,
+                  containerSize: containerSize
+                )
               )
               dismiss()
             }
@@ -95,7 +100,11 @@ public struct CropImageView: View {
     DragGesture()
       .onChanged { viewModel.dragChanged($0) }
       .onEnded { _ in
-        viewModel.dragEnded(cropSize: cropSize, containerSize: containerSize)
+        viewModel.dragEnded(
+          imageSize: image?.size,
+          cropSize: cropSize,
+          containerSize: containerSize
+        )
       }
   }
 
@@ -106,6 +115,7 @@ public struct CropImageView: View {
       .onChanged { viewModel.magnificationChanged($0) }
       .onEnded { _ in
         viewModel.magnificationEnded(
+          imageSize: image?.size,
           cropSize: cropSize,
           containerSize: containerSize
         )
