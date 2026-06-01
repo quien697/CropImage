@@ -27,7 +27,11 @@ struct CropMaskView: View {
 
 #Preview("Circle") {
   ZStack {
-    LinearGradient(colors: [.blue, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+    LinearGradient(
+      colors: [.blue, .purple, .pink],
+      startPoint: .topLeading,
+      endPoint: .bottomTrailing
+    )
     CropMaskView(shape: .circle, cropSize: CGSize(width: 250, height: 250))
   }
   .ignoresSafeArea()
@@ -35,7 +39,11 @@ struct CropMaskView: View {
 
 #Preview("Square") {
   ZStack {
-    LinearGradient(colors: [.blue, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+    LinearGradient(
+      colors: [.blue, .purple, .pink],
+      startPoint: .topLeading,
+      endPoint: .bottomTrailing
+    )
     CropMaskView(shape: .square, cropSize: CGSize(width: 250, height: 250))
   }
   .ignoresSafeArea()

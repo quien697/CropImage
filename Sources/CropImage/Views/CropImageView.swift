@@ -94,9 +94,10 @@ public struct CropImageView: View {
   }
 
   // MARK: - Gestures
-  private func dragGesture(cropSize: CGSize, containerSize: CGSize)
-    -> some Gesture
-  {
+  private func dragGesture(
+    cropSize: CGSize,
+    containerSize: CGSize
+  ) -> some Gesture {
     DragGesture()
       .onChanged { viewModel.dragChanged($0) }
       .onEnded { _ in
@@ -108,9 +109,10 @@ public struct CropImageView: View {
       }
   }
 
-  private func magnificationGesture(cropSize: CGSize, containerSize: CGSize)
-    -> some Gesture
-  {
+  private func magnificationGesture(
+    cropSize: CGSize,
+    containerSize: CGSize
+  ) -> some Gesture {
     MagnificationGesture()
       .onChanged { viewModel.magnificationChanged($0) }
       .onEnded { _ in

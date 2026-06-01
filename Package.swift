@@ -12,7 +12,7 @@ let package = Package(
     .library(name: "CropImage", targets: ["CropImage"])
   ],
   targets: [
-    .target(name: "CropImage"),
+    .target(name: "CropImage")
   ],
   swiftLanguageModes: [.v6]
 )
