@@ -125,18 +125,20 @@ public struct CropImageView: View {
   }
 }
 
-#Preview("Circle crop") {
-  CropImageView(
-    image: previewImage(width: 800, height: 600),
-    cropShape: .circle,
-    onCrop: { _ in }
-  )
-}
+#if DEBUG
+  #Preview("Circle crop") {
+    CropImageView(
+      image: previewImage(width: 800, height: 600),
+      cropShape: .circle,
+      onCrop: { _ in }
+    )
+  }
 
-#Preview("Square crop") {
-  CropImageView(
-    image: previewImage(width: 600, height: 800),
-    cropShape: .square,
-    onCrop: { _ in }
-  )
-}
+  #Preview("Square crop") {
+    CropImageView(
+      image: previewImage(width: 600, height: 800),
+      cropShape: .square,
+      onCrop: { _ in }
+    )
+  }
+#endif
