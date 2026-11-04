@@ -1,6 +1,6 @@
 # CropImage
 
-![iOS](https://img.shields.io/badge/iOS-26-blue.svg) ![Swift](https://img.shields.io/badge/Swift-6-orange.svg) ![SwiftUI](https://img.shields.io/badge/SwiftUI-brightgreen.svg) ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg) ![Xcode](https://img.shields.io/badge/Xcode-26.5-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![iOS](https://img.shields.io/badge/iOS-26-blue.svg) ![Swift](https://img.shields.io/badge/Swift-6-orange.svg) ![SwiftUI](https://img.shields.io/badge/SwiftUI-brightgreen.svg) ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg) ![Xcode](https://img.shields.io/badge/Xcode-27.2-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 A lightweight SwiftUI view for interactively cropping images on iOS.
 
@@ -21,7 +21,8 @@ A lightweight SwiftUI view for interactively cropping images on iOS.
 1. **Pan & zoom** — drag and pinch to position the image within the crop region.
 2. **Crop shapes** — choose between a circle or a square mask.
 3. **Edge clamping** — the image snaps back so the crop region is always filled.
-4. **Simple API** — a single `CropImageView` with an `onCrop` callback.
+4. **Fixed output size** — optionally get the crop at an exact pixel size with `outputSide`.
+5. **Simple API** — a single `CropImageView` with an `onCrop` callback.
 
 
 
@@ -36,7 +37,7 @@ A lightweight SwiftUI view for interactively cropping images on iOS.
 
 ## 🔧 Development Tools
 
-- Xcode 26.5
+- Xcode 27.2
 - Icons: [SF Symbols](https://developer.apple.com/sf-symbols/)
 - Version control: GitHub / Git
 - AI tools: [Claude Code](https://claude.com/claude-code)
@@ -65,7 +66,7 @@ dependencies: [
 
 ## 💻 Usage
 
-Present `CropImageView` (for example, in a sheet) with an image and a crop shape. The `onCrop` closure delivers the cropped `UIImage` when the user confirms.
+Present `CropImageView` (for example, in a sheet) with an image and a crop shape. The `onCrop` closure delivers the cropped `UIImage` when the user confirms, or `nil` if there is no image. The result is always square: a `.circle` crop isn't masked, so clip it to a circle where you display it.
 
 ```swift
 import CropImage
@@ -98,6 +99,14 @@ public enum CropShape {
 }
 ```
 
+By default the cropped image is the crop region's size in points, rendered at scale 1. Pass `outputSide` to get a fixed size in pixels instead (up to 8192), for example a 1024 × 1024 square:
+
+```swift
+CropImageView(image: sourceImage, cropShape: .square, outputSide: 1024) { result in
+    croppedImage = result
+}
+```
+
 
 
 ## 📂 Folder Structure
@@ -111,6 +120,9 @@ CropImage/
 │     ├─ Views/          # CropImageView, CropMaskView, CropShapeView
 │     ├─ Utilities/      # CropGeometry (pure geometry helpers)
 │     └─ Previews/       # Preview support
+├─ Tests/
+│  └─ CropImageTests/    # Swift Testing: crop output size
+├─ openspec/             # Development specs and change history (OpenSpec)
 └─ Screenshots/
 ```
 
