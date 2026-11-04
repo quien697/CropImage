@@ -11,7 +11,8 @@ The demo app lives on the `with-demo` branch, not `main`. A local `CropImageDemo
 ## Development Workflow
 Features and non-trivial fixes follow the OpenSpec + Superpowers loop in
 `.claude/rules/development-workflow.md`, which loads automatically. The living specs are
-`openspec/specs/crop-interaction` and `openspec/specs/crop-output`.
+`openspec/specs/crop-interaction` and `openspec/specs/crop-output`. Work branches from
+`develop` and returns to it through PRs; `main` holds only released, tagged code.
 
 ## Commands
 
