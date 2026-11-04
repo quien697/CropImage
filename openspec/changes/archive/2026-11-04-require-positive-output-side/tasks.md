@@ -15,4 +15,4 @@
 ## 4. Verify and archive
 
 - [x] 4.1 Build and run the full test suite on an iOS simulator
-- [ ] 4.2 Commit, then archive this change so the delta lands in `openspec/specs/crop-output`
+- [x] 4.2 Commit, then archive this change so the delta lands in `openspec/specs/crop-output`

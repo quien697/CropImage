@@ -2,7 +2,8 @@
 
 ## Purpose
 Deliver the framed crop to the app through `onCrop` as a square image at scale 1, either
-the size of the crop region or a fixed pixel size set with `outputSide` (at most 8192).
+the size of the crop region or a fixed pixel size set with `outputSide` (greater than 0
+and at most 8192).
 ## Requirements
 ### Requirement: Confirm Delivers the Crop
 Tapping the confirm button SHALL call `onCrop` exactly once with the cropped image, then
@@ -58,10 +59,15 @@ image has fewer pixels than that, it SHALL be upscaled.
 - **THEN** the cropped image is 4096 × 4096 pixels and contains the framed image, not a blank render
 
 ### Requirement: Output Size Limit
-`outputSide` SHALL be at most 8192. Creating a `CropImageView` with a larger `outputSide`
-SHALL stop with a precondition failure, rather than later delivering a blank image.
+`outputSide` SHALL be greater than 0 and at most 8192. Creating a `CropImageView` with an
+`outputSide` outside that range SHALL stop with a precondition failure, rather than later
+delivering a blank image or `nil`.
 
 #### Scenario: Output side over the limit
 - **WHEN** an app creates `CropImageView` with `outputSide` 10000
-- **THEN** the app stops with the precondition failure "outputSide must be at most 8192 pixels"
+- **THEN** the app stops with the precondition failure "outputSide must be greater than 0 and at most 8192 pixels"
+
+#### Scenario: Output side of zero
+- **WHEN** an app creates `CropImageView` with `outputSide` 0
+- **THEN** the app stops with the precondition failure "outputSide must be greater than 0 and at most 8192 pixels"
 
