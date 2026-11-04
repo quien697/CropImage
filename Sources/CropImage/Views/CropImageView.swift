@@ -15,6 +15,10 @@ public struct CropImageView: View {
 
   // MARK: - State
   @State private var viewModel = CropImageViewModel()
+  @GestureState(resetTransaction: Transaction(animation: .cropSettle))
+  private var dragTranslation: CGSize = .zero
+  @GestureState(resetTransaction: Transaction(animation: .cropSettle))
+  private var pinchMagnification: CGFloat = 1
 
   // MARK: - Properties
   private let image: UIImage?
@@ -50,8 +54,7 @@ public struct CropImageView: View {
   public var body: some View {
     NavigationStack {
       GeometryReader { geo in
-        let side = min(geo.size.width * 0.75, 400)
-        let cropSize = CGSize(width: side, height: side)
+        let cropSize = CropGeometry.cropSize(containerSize: geo.size)
         let containerSize = geo.size
 
         VStack {
@@ -62,16 +65,13 @@ public struct CropImageView: View {
               Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
-                .scaleEffect(viewModel.scale)
-                .offset(viewModel.offset)
+                .scaleEffect(viewModel.shownScale(pinch: pinchMagnification))
+                .offset(viewModel.shownOffset(drag: dragTranslation))
                 .gesture(
                   dragGesture(cropSize: cropSize, containerSize: containerSize)
                 )
                 .gesture(
-                  magnificationGesture(
-                    cropSize: cropSize,
-                    containerSize: containerSize
-                  )
+                  pinchGesture(cropSize: cropSize, containerSize: containerSize)
                 )
             }
 
@@ -82,6 +82,20 @@ public struct CropImageView: View {
 
           Spacer()
         }  // VStack
+        .onChange(of: geo.size) {
+          viewModel.settle(
+            imageSize: image?.size,
+            cropSize: cropSize,
+            containerSize: containerSize
+          )
+        }
+        .onChange(of: image?.size) {
+          viewModel.settle(
+            imageSize: image?.size,
+            cropSize: cropSize,
+            containerSize: containerSize
+          )
+        }
         .navigationTitle("Crop your photo")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -109,14 +123,20 @@ public struct CropImageView: View {
   }
 
   // MARK: - Gestures
+  /// Tracks a drag in `dragTranslation` while it lasts and hands it to the view model
+  /// when it ends. A cancelled drag never reaches `onEnded`, so the image returns to the
+  /// settled framing as `dragTranslation` resets.
   private func dragGesture(
     cropSize: CGSize,
     containerSize: CGSize
   ) -> some Gesture {
     DragGesture()
-      .onChanged { viewModel.dragChanged($0) }
-      .onEnded { _ in
+      .updating($dragTranslation) { value, translation, _ in
+        translation = value.translation
+      }
+      .onEnded { value in
         viewModel.dragEnded(
+          translation: value.translation,
           imageSize: image?.size,
           cropSize: cropSize,
           containerSize: containerSize
@@ -124,14 +144,19 @@ public struct CropImageView: View {
       }
   }
 
-  private func magnificationGesture(
+  /// Tracks a pinch in `pinchMagnification` while it lasts and hands it to the view
+  /// model when it ends. A cancelled pinch returns the image to the settled framing.
+  private func pinchGesture(
     cropSize: CGSize,
     containerSize: CGSize
   ) -> some Gesture {
-    MagnificationGesture()
-      .onChanged { viewModel.magnificationChanged($0) }
-      .onEnded { _ in
-        viewModel.magnificationEnded(
+    MagnifyGesture()
+      .updating($pinchMagnification) { value, magnification, _ in
+        magnification = value.magnification
+      }
+      .onEnded { value in
+        viewModel.pinchEnded(
+          magnification: value.magnification,
           imageSize: image?.size,
           cropSize: cropSize,
           containerSize: containerSize
