@@ -19,16 +19,27 @@ public struct CropImageView: View {
   // MARK: - Properties
   private let image: UIImage?
   private let cropShape: CropShape
+  private let outputSide: CGFloat?
   private let onCrop: (UIImage?) -> Void
 
   // MARK: - Init
+  /// Creates a crop view for `image`.
+  ///
+  /// - Parameter outputSide: The side length, in pixels, of the square image `onCrop`
+  ///   receives, at most 8192. If the selected area has fewer source pixels, it is
+  ///   upscaled. When `nil`, the image is the crop region's size in points, at scale 1.
   public init(
     image: UIImage?,
     cropShape: CropShape,
+    outputSide: CGFloat? = nil,
     onCrop: @escaping (UIImage?) -> Void
   ) {
+    if let outputSide {
+      precondition(outputSide <= 8192, "outputSide must be at most 8192 pixels")
+    }
     self.image = image
     self.cropShape = cropShape
+    self.outputSide = outputSide
     self.onCrop = onCrop
   }
 
@@ -82,7 +93,8 @@ public struct CropImageView: View {
                 viewModel.crop(
                   image: image,
                   cropSize: cropSize,
-                  containerSize: containerSize
+                  containerSize: containerSize,
+                  outputSide: outputSide
                 )
               )
               dismiss()

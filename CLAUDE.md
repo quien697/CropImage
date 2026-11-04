@@ -15,10 +15,18 @@ Features and non-trivial fixes follow the OpenSpec + Superpowers loop in
 
 ## Commands
 
-The package imports UIKit, so `swift build` on macOS fails. Build through `xcodebuild` against an iOS simulator:
+The package imports UIKit, so `swift build` / `swift test` on macOS fail. Build and test through `xcodebuild` against an iOS simulator:
 
 ```bash
+# Build
 xcodebuild build -scheme CropImage -destination 'generic/platform=iOS Simulator'
+
+# Run all tests (Swift Testing)
+xcodebuild test -scheme CropImage -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+
+# Run a single test: Swift Testing IDs need the trailing `()`; without it nothing runs and the result is still "TEST SUCCEEDED"
+xcodebuild test -scheme CropImage -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  '-only-testing:CropImageTests/CropImageViewModelTests/cropWithOutputSideIsThatManyPixelsSquare()'
 ```
 
 There is no SwiftLint or swift-format config in the repo. Sources use 2-space indentation.
@@ -28,7 +36,7 @@ There is no SwiftLint or swift-format config in the repo. Sources use 2-space in
 - **`CropImageView`** (public) wraps everything in a `NavigationStack` + `GeometryReader`. The crop region is a square of side `min(width * 0.75, 400)` pt, centered in the container. `CropMaskView` dims the container and punches the hole using a `.destinationOut` blend inside a `.compositingGroup()`. Confirm calls `viewModel.crop(...)`, passes the result to `onCrop`, then dismisses.
 - **`CropImageViewModel`** (`@MainActor @Observable`) holds only gesture state (`scale`, `offset`, plus `lastScale`/`lastOffset` bookkeeping). The image and crop shape are passed in on every call rather than stored, so an image that loads after the view is created still renders. `lastScale` is stored as `clampedScale - 1` because `MagnificationGesture` values start at 1.
 - **`CropGeometry`** contains pure CoreGraphics math: the `scaledToFill` rendered size, and offset clamping so the image always covers the crop hole. When a gesture ends, the view model clamps scale to the minimum fill scale and clamps offset, both with a spring animation.
-- **Rendering (`crop`)** rebuilds the same modifier chain the view uses on screen (`resizable → scaledToFill → scaleEffect → offset → frame(container)`), renders the whole container with `ImageRenderer` at scale 1, then cuts out the centered crop region with `cgImage.cropping(to:)`, which rounds the rectangle outward to whole pixels. **Keep this chain in sync with `CropImageView.body`**, or the output won't match what the user framed. The output is always a square image, even for `.circle`.
+- **Rendering (`crop`)** rebuilds the same modifier chain the view uses on screen (`resizable → scaledToFill → scaleEffect → offset → frame(container)`), then renders only the centered crop region with `ImageRenderer` at scale 1. **Keep this chain in sync with `CropImageView.body`**, or the output won't match what the user framed. With `outputSide`, the whole layout is scaled by `outputSide / cropSize.width`, so the frame is exactly `outputSide` points and pixel sizes come out exact. Don't use `renderer.scale` instead: floating-point error adds a pixel. Above 8192 px per side, `ImageRenderer` silently returns a transparent image, which is why `CropImageView.init` has a precondition. The output is always a square image, even for `.circle`.
 - **Previews**: `previewImage(...)` is `#if DEBUG`-only, so any `#Preview` that uses it must also be wrapped in `#if DEBUG`.
 
 ## Swift Coding Style

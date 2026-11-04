@@ -12,7 +12,8 @@ let package = Package(
     .library(name: "CropImage", targets: ["CropImage"])
   ],
   targets: [
-    .target(name: "CropImage")
+    .target(name: "CropImage"),
+    .testTarget(name: "CropImageTests", dependencies: ["CropImage"]),
   ],
   swiftLanguageModes: [.v6]
 )

@@ -98,6 +98,14 @@ public enum CropShape {
 }
 ```
 
+By default the cropped image is the crop region's size in points, rendered at scale 1. Pass `outputSide` to get a fixed size in pixels instead (up to 8192), for example a 1024 × 1024 square:
+
+```swift
+CropImageView(image: sourceImage, cropShape: .square, outputSide: 1024) { result in
+    croppedImage = result
+}
+```
+
 
 
 ## 📂 Folder Structure
@@ -111,6 +119,8 @@ CropImage/
 │     ├─ Views/          # CropImageView, CropMaskView, CropShapeView
 │     ├─ Utilities/      # CropGeometry (pure geometry helpers)
 │     └─ Previews/       # Preview support
+├─ Tests/
+│  └─ CropImageTests/    # Swift Testing: crop output size
 └─ Screenshots/
 ```
 
