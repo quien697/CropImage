@@ -7,7 +7,7 @@ SHALL be dimmed with black at 50% opacity, and the hole SHALL take the shape giv
 `cropShape`: a circle inscribed in the square for `.circle`, the full square for
 `.square`. The dimming SHALL NOT intercept touches.
 
-#### Scenario: Crop region on a phone in portrait
+#### Scenario: Crop region on a phone
 - **WHEN** the view is 402 pt wide and 724 pt tall
 - **THEN** the crop region is 301.5 × 301.5 pt, centered in the view
 
@@ -15,7 +15,7 @@ SHALL be dimmed with black at 50% opacity, and the hole SHALL take the shape giv
 - **WHEN** the view is 874 pt wide and 340 pt tall
 - **THEN** the crop region is 255 × 255 pt, centered in the view, and fits inside it
 
-#### Scenario: Crop region on a large screen
+#### Scenario: Crop region on a wide screen
 - **WHEN** the view is 1032 pt wide and 1376 pt tall
 - **THEN** the crop region is capped at 400 × 400 pt, centered in the view
 

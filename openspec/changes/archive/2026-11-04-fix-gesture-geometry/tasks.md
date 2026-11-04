@@ -23,4 +23,4 @@
 
 - [x] 4.1 Build and run the full test suite on an iOS simulator
 - [x] 4.2 Code review
-- [ ] 4.3 Commit, archive this change, then open the PR into `develop`
+- [x] 4.3 Commit, archive this change, then open the PR into `develop`
