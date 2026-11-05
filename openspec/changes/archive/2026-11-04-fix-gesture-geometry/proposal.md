@@ -1,10 +1,10 @@
 ## Why
 
 A review of the whole library found five bugs in how zoom, pan and the crop region are
-calculated. One reaches Medal Wall today: after zooming all the way out, pinching inward
+calculated. One reaches the app using it today: after zooming all the way out, pinching inward
 again flips the image upside down, because the pinch adds to the zoom instead of
 multiplying it. The others appear in landscape, on iPad, after a resize, or when a gesture
-is interrupted. Medal Wall avoids them for now, but any app that allows landscape or runs
+is interrupted. That app avoids them for now, but any app that allows landscape or runs
 on iPad would hit them, and fixing them while one app uses the library is cheapest.
 
 ## What Changes
@@ -34,7 +34,7 @@ on iPad would hit them, and fixing them while one app uses the library is cheape
 ## Impact
 
 - Public API: no change. Behavior changes are fixes, so this is a patch version.
-- Users of Medal Wall notice only that pinching works properly; portrait iPhone keeps the
+- Users of existing apps notice only that pinching works properly; portrait iPhone keeps the
   same crop region and framing.
 - Code: `CropGeometry`, `CropImageViewModel` (gesture state and its corrections),
   `CropImageView` (gesture wiring, view and image size handling).

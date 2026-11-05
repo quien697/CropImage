@@ -124,7 +124,7 @@ CropImageView(image: sourceImage, cropShape: .square, outputSide: 1024) { result
 The title defaults to "Crop your photo". Pass your own `title`; like any SwiftUI title, it's looked up in your app's strings:
 
 ```swift
-CropImageView(image: sourceImage, cropShape: .square, title: "Frame the medal") { result in
+CropImageView(image: sourceImage, cropShape: .square, title: "Frame your photo") { result in
     croppedImage = result
 }
 ```
@@ -139,7 +139,7 @@ The framing belongs to the view model, so a view model kept in the screen's stat
 import CropImage
 import SwiftUI
 
-struct FrameMedalView: View {
+struct FramePhotoView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = CropAreaViewModel()
     let photo: UIImage
@@ -147,7 +147,7 @@ struct FrameMedalView: View {
 
     var body: some View {
         CropArea(image: photo, cropShape: .square, viewModel: viewModel, showsGrid: true)
-            .navigationTitle("Frame the medal")
+            .navigationTitle("Frame your photo")
             .toolbar {
                 ToolbarItem(placement: .bottomBar) {
                     Button("Reset") { viewModel.reset() }
@@ -168,9 +168,9 @@ struct FrameMedalView: View {
 Push it from your own navigation stack:
 
 ```swift
-NavigationLink("Frame the medal") {
-    FrameMedalView(photo: photo) { framed in
-        medalImage = framed
+NavigationLink("Frame your photo") {
+    FramePhotoView(photo: photo) { framed in
+        framedPhoto = framed
     }
 }
 ```

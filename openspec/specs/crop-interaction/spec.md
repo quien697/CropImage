@@ -23,7 +23,7 @@ calling `onCrop`. The confirm button SHALL be disabled while `image` is `nil`.
 - **THEN** the navigation title is "Crop your photo"
 
 #### Scenario: Translated title
-- **WHEN** an app passes the title "Frame the medal", its strings catalog has a zh-TW translation for it, and the environment's locale is zh-TW
+- **WHEN** an app passes the title "Frame your photo", its strings catalog has a zh-TW translation for it, and the environment's locale is zh-TW
 - **THEN** the navigation title shows the zh-TW translation
 
 ### Requirement: Crop Region

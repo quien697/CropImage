@@ -117,7 +117,7 @@ public struct CropArea: View {
 #if DEBUG
   /// A screen an app might build around `CropArea`, with the view model in its own
   /// `@State` so each visit starts at the initial framing.
-  private struct FrameMedalPreviewScreen: View {
+  private struct FramePhotoPreviewScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = CropAreaViewModel()
 
@@ -126,7 +126,7 @@ public struct CropArea: View {
 
     var body: some View {
       CropArea(image: image, cropShape: .square, viewModel: viewModel, showsGrid: true)
-        .navigationTitle("Frame the medal")
+        .navigationTitle("Frame your photo")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .bottomBar) {
@@ -152,8 +152,8 @@ public struct CropArea: View {
 
     NavigationStack {
       List {
-        NavigationLink("Frame the medal") {
-          FrameMedalPreviewScreen(image: image) { framedImage = $0 }
+        NavigationLink("Frame your photo") {
+          FramePhotoPreviewScreen(image: image) { framedImage = $0 }
         }  // NavigationLink
 
         if let framedImage {

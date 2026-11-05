@@ -101,7 +101,7 @@ public struct CropImageView: View {
     CropImageView(
       image: previewImage(width: 800, height: 600),
       cropShape: .square,
-      title: "Frame the medal",
+      title: "Frame your photo",
       onCrop: { _ in }
     )
   }

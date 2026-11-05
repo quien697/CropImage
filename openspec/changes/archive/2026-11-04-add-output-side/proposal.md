@@ -2,8 +2,8 @@
 
 Apps that store or upload crops need a predictable pixel size. Today the cropped image is
 the crop region's size in points at scale 1, so it depends on the device (302 px on an
-iPhone 17 Pro, 400 px on an iPad) and is low resolution on every screen. Medal Wall
-prompted this by needing crops of at least 840 px, but the option is designed for any
+iPhone 17 Pro, 400 px on an iPad) and is low resolution on every screen. An app
+that needed crops of at least 840 px prompted this, but the option is designed for any
 app.
 
 ## What Changes

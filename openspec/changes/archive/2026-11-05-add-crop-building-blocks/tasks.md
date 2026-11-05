@@ -15,7 +15,7 @@
 - [x] 3.1 Move the crop area out of `CropImageView` into the public `CropArea(image:cropShape:viewModel:showsGrid:)`, which reports its image and size to the view model; add a `#Preview` of an app's own screen pushed onto a navigation stack, with its own title and Reset and Confirm buttons
 - [x] 3.2 Add the thirds grid, clipped to the crop shape and ignoring touches; add `#Preview`s with the grid on a circle and on a square
 - [x] 3.3 Rebuild `CropImageView` on `CropArea` and its own `CropAreaViewModel`, add the `title` parameter, and disable Confirm while `image` is `nil`; add `#Preview`s with a custom title and with no image
-- [x] 3.4 Check by hand (no unit-testable surface): in the previews, the app's own screen, the grid on both shapes, Reset, the custom title, and the disabled Confirm; in Medal Wall, that its crop sheets work as before, and that passing `title: "Edit Photo"` (already in its catalog) shows the zh-TW translation with the app set to zh-TW
+- [x] 3.4 Check by hand (no unit-testable surface): in the previews, the app's own screen, the grid on both shapes, Reset, the custom title, and the disabled Confirm; in an app, that its crop sheets work as before, and that passing a `title` already in its strings catalog shows the zh-TW translation with the app set to zh-TW
 
 ## 4. Docs
 

@@ -18,7 +18,7 @@ The crop region's size is computed in `CropImageView.body` from the width alone.
 
 **Non-Goals:**
 - Panning and pinching at the same time, or zooming around the pinch point (A6 in the
-  review). Medal Wall's users have no problem with the current gestures.
+  review). No app using the library has a problem with the current gestures.
 - A maximum zoom.
 - Right-to-left layouts. The review's concern is unconfirmed and gets its own change if
   confirmed.
@@ -69,7 +69,7 @@ The crop region's size is computed in `CropImageView.body` from the width alone.
 ## Risks / Trade-offs
 
 - [Gesture wiring has no unit-testable surface] → The math it calls is unit tested; the
-  wiring is checked by hand in Medal Wall.
+  wiring is checked by hand in an app.
 - [Pinching feels faster at high zoom than before] → That is the fix: at 3×, spreading the
   fingers to twice their distance now gives 6× rather than 4×, proportional as in Photos.
   Zooming still centers on the image rather than the pinch point (A6, out of scope).

@@ -18,7 +18,7 @@ struct PublicAPITests {
   @Test func anAppCanBuildItsOwnCropScreen() {
     let viewModel = CropAreaViewModel()
     _ = CropArea(image: nil, cropShape: .square, viewModel: viewModel, showsGrid: true)
-    _ = CropImageView(image: nil, cropShape: .circle, title: "Frame the medal") { _ in }
+    _ = CropImageView(image: nil, cropShape: .circle, title: "Frame your photo") { _ in }
 
     viewModel.reset()
 

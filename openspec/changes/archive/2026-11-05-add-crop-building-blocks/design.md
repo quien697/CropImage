@@ -5,11 +5,11 @@ that shows the image, its gestures and the mask, with a hard-coded title and clo
 confirm buttons. `CropImageViewModel` holds the settled zoom and pan and renders the
 crop. The view passes the image and its own size into every view model call.
 
-Medal Wall presents `CropImageView` as a sheet on four screens. It ships in English and
-zh-TW with an in-app language setting, and types its own components' titles as
-`LocalizedStringKey`, because a `String` title skips the strings catalog. Its MW-38
-change leaves restyling the crop screen (thirds grid, hint, Reset) for later. That
-screen would be built in Medal Wall from pieces this library offers.
+The app using the library today presents `CropImageView` as a sheet on four screens. It
+ships in English and zh-TW with an in-app language setting, and types its own
+components' titles as `LocalizedStringKey`, because a `String` title skips the strings
+catalog. It plans its own crop screen later, with a thirds grid, a hint and a Reset
+button, built from pieces this library offers.
 
 ## Goals / Non-Goals
 
@@ -25,7 +25,7 @@ screen would be built in Medal Wall from pieces this library offers.
   which part of the photo ends up in the crop, and the output image. An effect starts in
   the app that needs it and becomes its own library once a second app needs it.
 - An `onCancel` callback. A sheet's `onDismiss` covers it.
-- Medal Wall's mock styling, or a grid option on `CropImageView`.
+- An app's own styling of its crop screen, or a grid option on `CropImageView`.
 - Shipping translations of the default title.
 - Exposing the crop region's frame to the app, for example to place a hint next to it.
   This can be added later if an app needs it.
@@ -94,8 +94,8 @@ screen would be built in Medal Wall from pieces this library offers.
   the cropped image, because `crop` renders the image alone.
 - **The title is a `LocalizedStringKey`**, default "Crop your photo", passed to
   `navigationTitle`. SwiftUI looks it up in the app's strings with the environment's
-  locale, just like a title on one of the app's own screens. That also matches Medal
-  Wall's convention for component titles. The default title stays English unless the
+  locale, just like a title on one of the app's own screens. That also matches the
+  title convention of the app using the library today. The default title stays English unless the
   app's catalog has that key, as today.
   - *Alternative:* `String`, which skips the catalog.
   - *Alternative:* translations bundled in the package, which would have to cover every
@@ -138,10 +138,10 @@ screen would be built in Medal Wall from pieces this library offers.
   the full suite runs after the rename, before any behavior changes.
 - [Gestures, the grid and the screens have no unit-testable surface] → The view model is
   unit tested. The views are checked in `#Preview`s, and the ready-made screen is
-  checked in Medal Wall.
+  checked in an app.
 
 ## Migration Plan
 
 No app migration is needed. After this merges into `develop`, release 1.1.0 from
-`develop` into `main` with the tag `1.1.0`. It includes `outputSide`. MW-38 then moves
-Medal Wall to 1.1.0.
+`develop` into `main` with the tag `1.1.0`. It includes `outputSide`. Apps then move
+to 1.1.0.
