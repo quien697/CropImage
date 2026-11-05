@@ -1,5 +1,5 @@
 //
-//  CropImageViewModelTests.swift
+//  CropAreaViewModelTests.swift
 //  CropImage
 //
 //  Created by Quien on 2026-11-03.
@@ -11,7 +11,7 @@ import UIKit
 @testable import CropImage
 
 @MainActor
-struct CropImageViewModelTests {
+struct CropAreaViewModelTests {
   /// A 1200 × 1200 pixel image, larger than any crop the tests ask for.
   private let sourceImage: UIImage = {
     let format = UIGraphicsImageRendererFormat()
@@ -40,42 +40,37 @@ struct CropImageViewModelTests {
       }
   }()
 
-  private let cropSize = CGSize(width: 300, height: 300)
-  private let containerSize = CGSize(width: 400, height: 800)
+  /// A 400 × 800 pt area has a 300 × 300 pt crop region.
+  private let areaSize = CGSize(width: 400, height: 800)
 
   /// Without `outputSide`, a whole-number crop region comes out at its size in points,
   /// one pixel per point.
   @Test func cropWithoutOutputSideIsTheCropSideAtScaleOne() throws {
     let cropped = try #require(
-      CropImageViewModel().crop(
-        image: sourceImage, cropSize: cropSize, containerSize: containerSize))
+      viewModel(showing: sourceImage, areaSize: areaSize).crop())
     let cgImage = try #require(cropped.cgImage)
 
     #expect(cgImage.width == 300)
     #expect(cgImage.height == 300)
   }
 
-  /// A crop region off whole points rounds up to whole pixels. Rounding both edges
-  /// outward, as `main` did, gave 302 px here.
+  /// A crop region off whole points rounds up to whole pixels. A 407.2 pt wide area has a
+  /// 305.4 pt crop region starting 50.9 pt in; rounding both of its edges outward, as
+  /// 1.0.0 did, gave 307 px here.
   @Test func cropWithoutOutputSideRoundsAFractionalSideUp() throws {
     let cropped = try #require(
-      CropImageViewModel().crop(
-        image: sourceImage,
-        cropSize: CGSize(width: 300.5, height: 300.5),
-        containerSize: CGSize(width: 402, height: 874)))
+      viewModel(showing: sourceImage, areaSize: CGSize(width: 407.2, height: 874)).crop())
     let cgImage = try #require(cropped.cgImage)
 
-    #expect(cgImage.width == 301)
-    #expect(cgImage.height == 301)
+    #expect(cgImage.width == 306)
+    #expect(cgImage.height == 306)
     #expect(cropped.scale == 1)
   }
 
   /// With `outputSide`, the crop is exactly that many pixels on each side, at scale 1.
   @Test func cropWithOutputSideIsThatManyPixelsSquare() throws {
     let cropped = try #require(
-      CropImageViewModel().crop(
-        image: sourceImage, cropSize: cropSize, containerSize: containerSize,
-        outputSide: 840))
+      viewModel(showing: sourceImage, areaSize: areaSize).crop(outputSide: 840))
     let cgImage = try #require(cropped.cgImage)
 
     #expect(cgImage.width == 840)
@@ -86,11 +81,8 @@ struct CropImageViewModelTests {
   /// An iPhone 17 Pro's crop: 0.75 of a 402 pt wide screen is a fractional side.
   @Test func cropWithOutputSideIsExactOnAFractionalCropSide() throws {
     let cropped = try #require(
-      CropImageViewModel().crop(
-        image: sourceImage,
-        cropSize: CGSize(width: 301.5, height: 301.5),
-        containerSize: CGSize(width: 402, height: 874),
-        outputSide: 840))
+      viewModel(showing: sourceImage, areaSize: CGSize(width: 402, height: 874))
+        .crop(outputSide: 840))
     let cgImage = try #require(cropped.cgImage)
 
     #expect(cgImage.width == 840)
@@ -101,11 +93,8 @@ struct CropImageViewModelTests {
   /// container. A large output must still contain the image, not come back blank.
   @Test func cropWithALargeOutputSideOnAnIPadIsNotBlank() throws {
     let cropped = try #require(
-      CropImageViewModel().crop(
-        image: sourceImage,
-        cropSize: CGSize(width: 400, height: 400),
-        containerSize: CGSize(width: 1032, height: 1376),
-        outputSide: 4096))
+      viewModel(showing: sourceImage, areaSize: CGSize(width: 1032, height: 1376))
+        .crop(outputSide: 4096))
     let cgImage = try #require(cropped.cgImage)
 
     #expect(cgImage.width == 4096)
@@ -117,19 +106,12 @@ struct CropImageViewModelTests {
   /// same crop without it. Antialiasing where squares meet keeps the mean difference per
   /// byte under 1; a pan left unscaled with the output pushes it above 50.
   @Test func cropWithOutputSideFramesTheSameContentAsWithout() throws {
-    let viewModel = CropImageViewModel()
+    let viewModel = viewModel(showing: patternImage, areaSize: areaSize)
     viewModel.scale = 1.7
     viewModel.offset = CGSize(width: 40, height: -65)
 
-    let withoutOutputSide = try #require(
-      viewModel.crop(
-        image: patternImage, cropSize: cropSize, containerSize: containerSize
-      )?.cgImage)
-    let withOutputSide = try #require(
-      viewModel.crop(
-        image: patternImage, cropSize: cropSize, containerSize: containerSize,
-        outputSide: 900
-      )?.cgImage)
+    let withoutOutputSide = try #require(viewModel.crop()?.cgImage)
+    let withOutputSide = try #require(viewModel.crop(outputSide: 900)?.cgImage)
 
     let samplesWithout = colorSamples(of: withoutOutputSide, gridSide: 64)
     let samplesWith = colorSamples(of: withOutputSide, gridSide: 64)
@@ -139,6 +121,33 @@ struct CropImageViewModelTests {
     let meanDifference = Double(totalDifference) / Double(samplesWithout.count)
 
     #expect(meanDifference < 10)
+  }
+
+  /// Without an image there is nothing to crop.
+  @Test func cropWithoutAnImageIsNil() {
+    let viewModel = CropAreaViewModel()
+    viewModel.areaSizeChanged(to: areaSize)
+
+    #expect(viewModel.crop() == nil)
+    #expect(viewModel.crop(outputSide: 840) == nil)
+  }
+
+  /// Before its area appears, the view model doesn't know the area's size, so there is no
+  /// crop region to render yet.
+  @Test func cropBeforeTheAreaAppearsIsNil() {
+    let viewModel = CropAreaViewModel()
+    viewModel.imageChanged(to: sourceImage)
+
+    #expect(viewModel.crop() == nil)
+    #expect(viewModel.crop(outputSide: 840) == nil)
+  }
+
+  /// A view model whose area is `areaSize` and shows `image`, as `CropArea` sets it up.
+  private func viewModel(showing image: UIImage, areaSize: CGSize) -> CropAreaViewModel {
+    let viewModel = CropAreaViewModel()
+    viewModel.imageChanged(to: image)
+    viewModel.areaSizeChanged(to: areaSize)
+    return viewModel
   }
 
   /// The RGBA bytes of `image` scaled to `gridSide` × `gridSide` without smoothing.
