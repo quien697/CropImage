@@ -126,8 +126,9 @@ public final class CropAreaViewModel {
   /// rendering fails.
   ///
   /// - Parameter outputSide: The side length, in pixels, of the square image returned,
-  ///   greater than 0 and at most 8192. If the framed area has fewer source pixels, it is
-  ///   upscaled. When `nil`, the image is the crop region's size in points, at scale 1.
+  ///   greater than 0 and at most 8192; a fraction rounds up. If the framed area has
+  ///   fewer source pixels, it is upscaled. When `nil`, the image is the crop region's
+  ///   size in points, rounded up to whole pixels, at scale 1.
   public func crop(outputSide: CGFloat? = nil) -> UIImage? {
     if let outputSide {
       precondition(
@@ -137,12 +138,14 @@ public final class CropAreaViewModel {
     guard let image, areaSize.width > 0, areaSize.height > 0 else { return nil }
     let cropSize = CropGeometry.cropSize(containerSize: areaSize)
 
-    // Lay the image out as on screen, enlarged so the crop region is `outputSide`
-    // points, and render only that region at scale 1. Rendering the whole
-    // area instead exceeds ImageRenderer's size limit at large outputs and
-    // comes back blank.
-    let outputScale = outputSide.map { $0 / cropSize.width } ?? 1
-    let outputSize = outputSide.map { CGSize(width: $0, height: $0) } ?? cropSize
+    // Lay the image out as on screen, scaled so the crop region is `outputSide`, or
+    // else its own side, rounded up to whole points, and render only that region at
+    // scale 1. ImageRenderer rounds a fractional side up but layout rounds it to the
+    // nearest pixel, which leaves the last row and column empty. Rendering the whole
+    // area instead exceeds ImageRenderer's size limit at large outputs and comes back
+    // blank.
+    let renderSide = (outputSide ?? cropSize.width).rounded(.up)
+    let outputScale = renderSide / cropSize.width
     let view = Image(uiImage: image)
       .resizable()
       .scaledToFill()
@@ -152,7 +155,7 @@ public final class CropAreaViewModel {
         width: areaSize.width * outputScale,
         height: areaSize.height * outputScale
       )
-      .frame(width: outputSize.width, height: outputSize.height)
+      .frame(width: renderSide, height: renderSide)
       .clipped()
     return ImageRenderer(content: view).uiImage
   }

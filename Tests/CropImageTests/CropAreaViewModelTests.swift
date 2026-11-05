@@ -67,6 +67,18 @@ struct CropAreaViewModelTests {
     #expect(cropped.scale == 1)
   }
 
+  /// A side rounded up from under half a pixel still fills its last row and column: a
+  /// 375 pt wide area's 281.25 pt crop region left them empty.
+  @Test func cropWithoutOutputSideFillsAFractionalSidesEdges() throws {
+    let cropped = try #require(
+      viewModel(showing: sourceImage, areaSize: CGSize(width: 375, height: 667)).crop())
+    let cgImage = try #require(cropped.cgImage)
+
+    #expect(cgImage.width == 282)
+    #expect(cgImage.height == 282)
+    #expect(try lowestAlpha(of: cgImage) == 255)
+  }
+
   /// With `outputSide`, the crop is exactly that many pixels on each side, at scale 1.
   @Test func cropWithOutputSideIsThatManyPixelsSquare() throws {
     let cropped = try #require(
@@ -87,6 +99,18 @@ struct CropAreaViewModelTests {
 
     #expect(cgImage.width == 840)
     #expect(cgImage.height == 840)
+  }
+
+  /// A fractional `outputSide` rounds up to whole pixels and fills them: 840.4 left the
+  /// last row and column of 841 empty.
+  @Test func cropWithAFractionalOutputSideRoundsUpAndFillsIt() throws {
+    let cropped = try #require(
+      viewModel(showing: sourceImage, areaSize: areaSize).crop(outputSide: 840.4))
+    let cgImage = try #require(cropped.cgImage)
+
+    #expect(cgImage.width == 841)
+    #expect(cgImage.height == 841)
+    #expect(try lowestAlpha(of: cgImage) == 255)
   }
 
   /// An iPad Pro 13-inch's crop: the side is capped at 400 pt inside a 1032 × 1376 pt
@@ -168,6 +192,12 @@ struct CropAreaViewModelTests {
       context.draw(image, in: CGRect(x: 0, y: 0, width: gridSide, height: gridSide))
     }
     return bytes
+  }
+
+  /// The lowest alpha of any pixel in the square `image`; an empty row or column is 0.
+  private func lowestAlpha(of image: CGImage) throws -> UInt8 {
+    let bytes = try colorSamples(of: image, gridSide: image.width)
+    return stride(from: 3, to: bytes.count, by: 4).lazy.map { bytes[$0] }.min() ?? 0
   }
 
   /// The alpha of the pixel at the center of `image`; a blank render is 0.

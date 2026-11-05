@@ -31,9 +31,9 @@ public struct CropImageView: View {
   ///     `onCrop` receives `nil` only if rendering fails.
   ///   - cropShape: The shape of the hole in the dimming.
   ///   - outputSide: The side length, in pixels, of the square image `onCrop` receives,
-  ///     greater than 0 and at most 8192. If the selected area has fewer source pixels,
-  ///     it is upscaled. When `nil`, the image is the crop region's size in points, at
-  ///     scale 1.
+  ///     greater than 0 and at most 8192; a fraction rounds up. If the selected area has
+  ///     fewer source pixels, it is upscaled. When `nil`, the image is the crop region's
+  ///     size in points, rounded up to whole pixels, at scale 1.
   ///   - title: The navigation title, looked up in your app's strings like any SwiftUI
   ///     title.
   ///   - onCrop: Receives the cropped image when the user confirms.
