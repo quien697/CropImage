@@ -113,8 +113,8 @@ struct CropAreaViewModelTests {
     let withoutOutputSide = try #require(viewModel.crop()?.cgImage)
     let withOutputSide = try #require(viewModel.crop(outputSide: 900)?.cgImage)
 
-    let samplesWithout = colorSamples(of: withoutOutputSide, gridSide: 64)
-    let samplesWith = colorSamples(of: withOutputSide, gridSide: 64)
+    let samplesWithout = try colorSamples(of: withoutOutputSide, gridSide: 64)
+    let samplesWith = try colorSamples(of: withOutputSide, gridSide: 64)
     let totalDifference = zip(samplesWithout, samplesWith).reduce(0) { total, pair in
       total + abs(Int(pair.0) - Int(pair.1))
     }
@@ -150,20 +150,22 @@ struct CropAreaViewModelTests {
     return viewModel
   }
 
-  /// The RGBA bytes of `image` scaled to `gridSide` × `gridSide` without smoothing.
-  private func colorSamples(of image: CGImage, gridSide: Int) -> [UInt8] {
+  /// The RGBA bytes of `image` scaled to `gridSide` × `gridSide` without smoothing. Fails
+  /// the test if its drawing context can't be created, rather than returning zeros.
+  private func colorSamples(of image: CGImage, gridSide: Int) throws -> [UInt8] {
     var bytes = [UInt8](repeating: 0, count: gridSide * gridSide * 4)
-    bytes.withUnsafeMutableBytes { buffer in
-      let context = CGContext(
-        data: buffer.baseAddress,
-        width: gridSide,
-        height: gridSide,
-        bitsPerComponent: 8,
-        bytesPerRow: gridSide * 4,
-        space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-      context?.interpolationQuality = .none
-      context?.draw(image, in: CGRect(x: 0, y: 0, width: gridSide, height: gridSide))
+    try bytes.withUnsafeMutableBytes { buffer in
+      let context = try #require(
+        CGContext(
+          data: buffer.baseAddress,
+          width: gridSide,
+          height: gridSide,
+          bitsPerComponent: 8,
+          bytesPerRow: gridSide * 4,
+          space: CGColorSpaceCreateDeviceRGB(),
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+      context.interpolationQuality = .none
+      context.draw(image, in: CGRect(x: 0, y: 0, width: gridSide, height: gridSide))
     }
     return bytes
   }
