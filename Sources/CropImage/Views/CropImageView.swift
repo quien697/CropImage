@@ -14,7 +14,7 @@ public struct CropImageView: View {
   @Environment(\.dismiss) private var dismiss
 
   // MARK: - State
-  @State private var viewModel = CropAreaViewModel()
+  @State private var viewModel = CropImageViewModel()
 
   // MARK: - Properties
   private let image: UIImage?
@@ -59,7 +59,7 @@ public struct CropImageView: View {
   // MARK: - Body
   public var body: some View {
     NavigationStack {
-      CropArea(image: image, cropShape: cropShape, viewModel: viewModel)
+      CropArea(image: image, cropShape: cropShape, viewModel: viewModel.areaViewModel)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -70,10 +70,12 @@ public struct CropImageView: View {
           }  // ToolbarItem
           ToolbarItem(placement: .confirmationAction) {
             Button(role: .confirm) {
-              onCrop(viewModel.crop(outputSide: outputSide))
-              dismiss()
+              viewModel.confirm(outputSide: outputSide) { croppedImage in
+                onCrop(croppedImage)
+                dismiss()
+              }
             }
-            .disabled(image == nil)
+            .disabled(!viewModel.canConfirm)
           }  // ToolbarItem
         }  // toolbar
     }  // NavigationStack

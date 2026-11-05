@@ -68,9 +68,9 @@ or how gestures snap back, stop and open a change so the spec stays honest.
 
 - **Specs describe what an app using the library can observe**: `CropImageView`,
   `CropArea`, `CropAreaViewModel`'s public API, `CropShape`, and the images `onCrop`
-  and `crop(outputSide:)` deliver. Internal types and members (`CropGeometry`, the
-  mask views, the view model's framing math) can change without a spec delta as long as that
-  behavior stays the same.
+  and `crop(outputSide:)` deliver. Internal types and members (`CropGeometry`,
+  `CropImageViewModel`, the mask views, the area view model's framing math) can change
+  without a spec delta as long as that behavior stays the same.
 - **Specs track code.** Any change that alters `crop-interaction` or `crop-output` must
   include a spec delta. Treat an undocumented behavior change as a spec gap in review.
 - **Superpowers contributes discipline, not artifacts.**
