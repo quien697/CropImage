@@ -8,7 +8,7 @@
 import Foundation
 
 /// The shape of the crop region presented over the image.
-public enum CropShape {
+public enum CropShape: Sendable {
   case circle
   case square
 }

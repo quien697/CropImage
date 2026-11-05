@@ -32,7 +32,7 @@ under `docs/superpowers/`.
 3. **Branch** from `develop` — never work on `main` or `develop` directly.
 4. **Implement each task with TDD** (`superpowers:test-driven-development`), one `tasks.md`
    item at a time, checking each off as it lands.
-   - Output behavior is testable through `CropImageViewModel.crop`. Check pixel content,
+   - Output behavior is testable through `CropAreaViewModel.crop`. Check pixel content,
      not only dimensions: `ImageRenderer` can return a correctly sized image that is blank.
    - *Per-task exception:* gestures, the mask, and layout have no unit-testable surface.
      Say so in the task and verify in a `#Preview` or the demo app on the `with-demo`
@@ -67,8 +67,9 @@ or how gestures snap back, stop and open a change so the spec stays honest.
 ## Reconciliation rules
 
 - **Specs describe what an app using the library can observe**: `CropImageView`,
-  `CropShape`, and the image `onCrop` delivers. Internal types (`CropImageViewModel`,
-  `CropGeometry`, the mask views) can change without a spec delta as long as that
+  `CropArea`, `CropAreaViewModel`'s public API, `CropShape`, and the images `onCrop`
+  and `crop(outputSide:)` deliver. Internal types and members (`CropGeometry`, the
+  mask views, the view model's framing math) can change without a spec delta as long as that
   behavior stays the same.
 - **Specs track code.** Any change that alters `crop-interaction` or `crop-output` must
   include a spec delta. Treat an undocumented behavior change as a spec gap in review.

@@ -26,6 +26,6 @@ telling the developer why. The review also found that no test checks what a crop
 ## Impact
 
 - Public API: no signature change. An app passing `outputSide` of 0 or less now stops
-  with a precondition failure instead of receiving `nil`. Medal Wall, the only app using
-  CropImage, passes 840.
+  with a precondition failure instead of receiving `nil`. The only app using CropImage
+  passes 840.
 - Code: `CropImageView.init`, `Tests/CropImageTests/CropImageViewModelTests.swift`.

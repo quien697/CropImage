@@ -17,7 +17,7 @@
 - [x] 3.2 Replace `MagnificationGesture` with `MagnifyGesture`
 - [x] 3.3 Call `settle` when the view's size or the image's size changes (reset on a new image object was dropped after code review)
 - [x] 3.4 Update the architecture notes in `CLAUDE.md` (crop region formula, gesture state)
-- [x] 3.5 Check the gestures by hand in Medal Wall (no unit-testable surface): pinch again at the smallest zoom, zoom out from far in, drag past an edge, and interrupt a drag
+- [x] 3.5 Check the gestures by hand in an app (no unit-testable surface): pinch again at the smallest zoom, zoom out from far in, drag past an edge, and interrupt a drag
 
 ## 4. Verify and archive
 
