@@ -26,4 +26,4 @@
 
 - [x] 5.1 Build and run the full test suite on an iOS simulator
 - [x] 5.2 Code review
-- [ ] 5.3 Commit, archive this change, update both specs' Purpose to mention `CropArea` and `CropAreaViewModel`, then open the PR into `develop`
+- [x] 5.3 Commit, archive this change, update both specs' Purpose to mention `CropArea` and `CropAreaViewModel`, then open the PR into `develop`
