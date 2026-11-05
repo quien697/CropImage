@@ -11,4 +11,4 @@
 
 - [x] 3.1 Build and run the full test suite on an iOS simulator
 - [x] 3.2 Code review against this change's spec delta
-- [ ] 3.3 Commit on `develop`, then archive this change
+- [x] 3.3 Commit on `develop`, then archive this change
