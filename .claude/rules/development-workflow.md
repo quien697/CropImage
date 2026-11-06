@@ -33,7 +33,8 @@ under `docs/superpowers/`.
 4. **Implement each task with TDD** (`superpowers:test-driven-development`), one `tasks.md`
    item at a time, checking each off as it lands.
    - Output behavior is testable through `CropAreaViewModel.crop`. Check pixel content,
-     not only dimensions: `ImageRenderer` can return a correctly sized image that is blank.
+     not only dimensions: a renderer can return a correctly sized image that is blank or
+     has a transparent edge.
    - *Per-task exception:* gestures, the mask, and layout have no unit-testable surface.
      Say so in the task and verify in a `#Preview` or the demo app on the `with-demo`
      branch, rather than writing a test that asserts nothing.

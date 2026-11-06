@@ -5,6 +5,7 @@
 //  Created by Quien on 2026-11-03.
 //
 
+import SwiftUI
 import Testing
 import UIKit
 
@@ -113,6 +114,39 @@ struct CropAreaViewModelTests {
     #expect(try lowestAlpha(of: cgImage) == 255)
   }
 
+  /// Zoomed out as far as it goes, a square image just covers the crop region, and the
+  /// crop is opaque to its edges. Laying the image out left a half-transparent edge in a
+  /// 428 × 926 pt area.
+  @Test func cropAtTheSmallestZoomIsOpaqueToItsEdges() throws {
+    let viewModel = viewModel(showing: sourceImage, areaSize: CGSize(width: 428, height: 926))
+    viewModel.pinchEnded(magnification: 0.01)
+    let cgImage = try #require(viewModel.crop()?.cgImage)
+
+    #expect(try lowestAlpha(of: cgImage) == 255)
+  }
+
+  /// A photo without alpha, such as a decoded JPEG, still crops to an image with an alpha
+  /// channel, as crops always had. Drawing in the photo's own opaque format dropped it.
+  @Test func cropOfAPhotoWithoutAlphaHasAnAlphaChannel() throws {
+    let jpegData = try #require(sourceImage.jpegData(compressionQuality: 0.9))
+    let jpegImage = try #require(UIImage(data: jpegData))
+    let cgImage = try #require(
+      viewModel(showing: jpegImage, areaSize: areaSize).crop()?.cgImage)
+
+    #expect(![.none, .noneSkipFirst, .noneSkipLast].contains(cgImage.alphaInfo))
+  }
+
+  /// Panned as far as it goes, the image's edge is the crop's edge, and the crop is
+  /// opaque to its edges, even on a whole-number crop side.
+  @Test func cropAtThePanLimitIsOpaqueToItsEdges() throws {
+    let viewModel = viewModel(showing: patternImage, areaSize: areaSize)
+    viewModel.pinchEnded(magnification: 0.01)
+    viewModel.dragEnded(translation: CGSize(width: 1000, height: 0))
+    let cgImage = try #require(viewModel.crop()?.cgImage)
+
+    #expect(try lowestAlpha(of: cgImage) == 255)
+  }
+
   /// An iPad Pro 13-inch's crop: the side is capped at 400 pt inside a 1032 × 1376 pt
   /// container. A large output must still contain the image, not come back blank.
   @Test func cropWithALargeOutputSideOnAnIPadIsNotBlank() throws {
@@ -145,6 +179,78 @@ struct CropAreaViewModelTests {
     let meanDifference = Double(totalDifference) / Double(samplesWithout.count)
 
     #expect(meanDifference < 10)
+  }
+
+  /// A high dynamic range image keeps its highlights: a PQ image whose linear value is
+  /// about 4.8 came out clipped to 1.
+  @Test func cropKeepsHighDynamicRangeHighlights() throws {
+    let hdrImage = try filledImage(
+      colorSpaceName: CGColorSpace.itur_2100_PQ, components: [0.75, 0.75, 0.75, 1],
+      isHalfFloat: true)
+    let cgImage = try #require(viewModel(showing: hdrImage, areaSize: areaSize).crop()?.cgImage)
+
+    #expect(try centerColor(of: cgImage, in: CGColorSpace.extendedLinearSRGB)[0] > 4)
+  }
+
+  /// A Display P3 image keeps the colors outside sRGB: its pure red isn't pulled in to
+  /// sRGB's red.
+  @Test func cropKeepsWideColors() throws {
+    let wideColorImage = try filledImage(
+      colorSpaceName: CGColorSpace.displayP3, components: [1, 0, 0, 1])
+    let cgImage = try #require(
+      viewModel(showing: wideColorImage, areaSize: areaSize).crop()?.cgImage)
+    let color = try centerColor(of: cgImage, in: CGColorSpace.displayP3)
+
+    #expect(color[0] > 0.99)
+    #expect(color[1] < 0.01)
+    #expect(color[2] < 0.01)
+  }
+
+  /// The crop shows what its `CropArea` shows in the crop region: zoomed, panned, for an
+  /// image turned by its orientation, and in a 402 pt wide area whose crop region is
+  /// 301.5 pt. Both are rendered at 4 pixels per point, where that region falls on whole
+  /// pixels. Resampling differences keep the mean difference per byte between 0.2 and
+  /// 1.5; a pan off by 10 pt gives 4.4 to 16.7, so the test allows under 3.
+  @Test func cropShowsWhatTheAreaShows() throws {
+    let turnedImage = try UIImage(
+      cgImage: #require(patternImage.cgImage), scale: 1, orientation: .right)
+    let framings: [(image: UIImage, areaSize: CGSize, scale: CGFloat, offset: CGSize)] = [
+      (patternImage, areaSize, 1, .zero),
+      (patternImage, areaSize, 1.7, CGSize(width: 40, height: -65)),
+      (patternImage, areaSize, 2.3, CGSize(width: -120, height: 90)),
+      (turnedImage, areaSize, 1.7, CGSize(width: 40, height: -65)),
+      (patternImage, CGSize(width: 402, height: 874), 1.7, CGSize(width: 40, height: -65)),
+    ]
+    let pixelsPerPoint: CGFloat = 4
+    for framing in framings {
+      let viewModel = viewModel(showing: framing.image, areaSize: framing.areaSize)
+      viewModel.scale = framing.scale
+      viewModel.offset = framing.offset
+      let renderer = ImageRenderer(
+        content: CropArea(image: framing.image, cropShape: .square, viewModel: viewModel)
+          .frame(width: framing.areaSize.width, height: framing.areaSize.height))
+      renderer.scale = pixelsPerPoint
+      let cropSide = CropGeometry.cropSize(containerSize: framing.areaSize).width
+      let cropRegion = CGRect(
+        x: (framing.areaSize.width - cropSide) / 2 * pixelsPerPoint,
+        y: (framing.areaSize.height - cropSide) / 2 * pixelsPerPoint,
+        width: cropSide * pixelsPerPoint,
+        height: cropSide * pixelsPerPoint)
+      let shownRegion = try #require(renderer.cgImage?.cropping(to: cropRegion))
+      let cropped = try #require(
+        viewModel.crop(outputSide: cropSide * pixelsPerPoint)?.cgImage)
+
+      let samplesShown = try colorSamples(of: shownRegion, gridSide: 64)
+      let samplesCropped = try colorSamples(of: cropped, gridSide: 64)
+      let totalDifference = zip(samplesShown, samplesCropped).reduce(0) { total, pair in
+        total + abs(Int(pair.0) - Int(pair.1))
+      }
+      let meanDifference = Double(totalDifference) / Double(samplesShown.count)
+
+      #expect(
+        meanDifference < 3,
+        "area \(framing.areaSize), zoom \(framing.scale), pan \(framing.offset)")
+    }
   }
 
   /// Without an image there is nothing to crop.
@@ -198,6 +304,58 @@ struct CropAreaViewModelTests {
   private func lowestAlpha(of image: CGImage) throws -> UInt8 {
     let bytes = try colorSamples(of: image, gridSide: image.width)
     return stride(from: 3, to: bytes.count, by: 4).lazy.map { bytes[$0] }.min() ?? 0
+  }
+
+  /// A 1200 × 1200 pixel image filled with `components` in the color space named
+  /// `colorSpaceName`, with 16-bit float components when `isHalfFloat`, else 8-bit.
+  private func filledImage(
+    colorSpaceName: CFString, components: [CGFloat], isHalfFloat: Bool = false
+  ) throws -> UIImage {
+    let colorSpace = try #require(CGColorSpace(name: colorSpaceName))
+    let bitmapInfo =
+      isHalfFloat
+      ? CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.floatComponents.rawValue
+        | CGBitmapInfo.byteOrder16Little.rawValue
+      : CGImageAlphaInfo.premultipliedLast.rawValue
+    let context = try #require(
+      CGContext(
+        data: nil,
+        width: 1200,
+        height: 1200,
+        bitsPerComponent: isHalfFloat ? 16 : 8,
+        bytesPerRow: 0,
+        space: colorSpace,
+        bitmapInfo: bitmapInfo))
+    context.setFillColor(try #require(CGColor(colorSpace: colorSpace, components: components)))
+    context.fill(CGRect(x: 0, y: 0, width: 1200, height: 1200))
+    return UIImage(cgImage: try #require(context.makeImage()))
+  }
+
+  /// The red, green and blue of the pixel at the center of `image` in the color space
+  /// named `colorSpaceName`, as floats that can go past 0 and 1 in an extended space.
+  private func centerColor(of image: CGImage, in colorSpaceName: CFString) throws -> [Float] {
+    let colorSpace = try #require(CGColorSpace(name: colorSpaceName))
+    var components: [Float] = [0, 0, 0, 0]
+    try components.withUnsafeMutableBytes { buffer in
+      let context = try #require(
+        CGContext(
+          data: buffer.baseAddress,
+          width: 1,
+          height: 1,
+          bitsPerComponent: 32,
+          bytesPerRow: 16,
+          space: colorSpace,
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            | CGBitmapInfo.floatComponents.rawValue | CGBitmapInfo.byteOrder32Little.rawValue))
+      context.draw(
+        image,
+        in: CGRect(
+          x: -CGFloat(image.width) / 2,
+          y: -CGFloat(image.height) / 2,
+          width: CGFloat(image.width),
+          height: CGFloat(image.height)))
+    }
+    return Array(components.prefix(3))
   }
 
   /// The alpha of the pixel at the center of `image`; a blank render is 0.
