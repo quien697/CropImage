@@ -46,6 +46,15 @@ struct CropImageViewModelTests {
     #expect(!viewModel.canConfirm)
   }
 
+  /// Confirm is unavailable while the area's image has no pixels, as without an image.
+  @Test func confirmIsUnavailableForAnImageWithoutPixels() {
+    let viewModel = CropImageViewModel()
+    viewModel.areaViewModel.imageChanged(to: UIImage())
+    viewModel.areaViewModel.areaSizeChanged(to: CGSize(width: 400, height: 800))
+
+    #expect(!viewModel.canConfirm)
+  }
+
   /// A second Confirm, as from a tap that lands before the sheet closes, doesn't call
   /// `onCrop` again.
   @Test func confirmingTwiceDeliversOneCrop() {

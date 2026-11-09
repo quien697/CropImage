@@ -27,8 +27,8 @@ public struct CropImageView: View {
   /// Creates a crop view for `image`.
   ///
   /// - Parameters:
-  ///   - image: The image to crop. Confirm stays disabled until there is one, so
-  ///     `onCrop` receives `nil` only if rendering fails.
+  ///   - image: The image to crop. Confirm stays disabled until there is one with
+  ///     pixels, so `onCrop` receives `nil` only if rendering fails.
   ///   - cropShape: The shape of the hole in the dimming.
   ///   - outputSide: The side length, in pixels, of the square image `onCrop` receives,
   ///     greater than 0 and at most 8192; a fraction rounds up. If the selected area has

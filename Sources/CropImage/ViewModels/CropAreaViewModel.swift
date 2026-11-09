@@ -46,8 +46,14 @@ public final class CropAreaViewModel {
   }
 
   // MARK: - Area changes
-  /// Stores the image the area shows, correcting the framing if its size changed.
+  /// Stores the image the area shows, correcting the framing if its size changed. An
+  /// image without pixels, such as `UIImage()`, has nothing to frame or crop, so it is
+  /// stored as no image.
   func imageChanged(to newImage: UIImage?) {
+    var newImage = newImage
+    if let size = newImage?.size, size.width <= 0 || size.height <= 0 {
+      newImage = nil
+    }
     let sizeChanged = newImage?.size != image?.size
     image = newImage
     if sizeChanged {
@@ -78,11 +84,9 @@ public final class CropAreaViewModel {
   /// Raises the zoom to the smallest zoom that covers the crop region, then limits
   /// the pan so the image covers it, animated with a spring.
   func settle() {
-    // An area without a size yet, or an image without pixels, has no aspect ratio to
-    // compute a zoom from (0 / 0).
+    // An area without a size yet has no aspect ratio to compute a zoom from (0 / 0).
     guard areaSize.width > 0, areaSize.height > 0 else { return }
     let imageSize = image?.size
-    if let imageSize, imageSize.width <= 0 || imageSize.height <= 0 { return }
 
     let cropSize = CropGeometry.cropSize(containerSize: areaSize)
     let rendered = renderedSize(imageSize: imageSize, in: areaSize)
@@ -122,8 +126,8 @@ public final class CropAreaViewModel {
   }
 
   /// The image inside the crop region, framed as the user left it at the end of their
-  /// last gesture, or `nil` if there is no image, the area hasn't appeared yet, or
-  /// rendering fails.
+  /// last gesture, or `nil` if there is no image, the image has no pixels, the area
+  /// hasn't appeared yet, or rendering fails.
   ///
   /// - Parameter outputSide: The side length, in pixels, of the square image returned,
   ///   greater than 0 and at most 8192; a fraction rounds up. If the framed area has

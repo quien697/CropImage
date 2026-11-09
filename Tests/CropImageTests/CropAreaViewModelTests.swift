@@ -275,6 +275,14 @@ struct CropAreaViewModelTests {
     #expect(viewModel.crop(outputSide: 840) == nil)
   }
 
+  /// An image without pixels, such as `UIImage()`, has nothing to crop.
+  @Test func cropOfAnImageWithoutPixelsIsNil() {
+    let viewModel = viewModel(showing: UIImage(), areaSize: areaSize)
+
+    #expect(viewModel.crop() == nil)
+    #expect(viewModel.crop(outputSide: 840) == nil)
+  }
+
   /// Before its area appears, the view model doesn't know the area's size, so there is no
   /// crop region to render yet.
   @Test func cropBeforeTheAreaAppearsIsNil() {
