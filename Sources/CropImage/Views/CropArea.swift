@@ -62,6 +62,9 @@ public struct CropArea: View {
             .offset(viewModel.shownOffset(drag: dragTranslation))
             .gesture(dragGesture)
             .gesture(pinchGesture)
+            // Right-to-left layouts would mirror the pan shown, which `crop` draws
+            // unmirrored. A photo's left and right don't swap for the app's language.
+            .environment(\.layoutDirection, .leftToRight)
         }
 
         CropMaskView(shape: cropShape, cropSize: cropSize)
@@ -171,5 +174,13 @@ public struct CropArea: View {
     @Previewable @State var image = previewImage(width: 600, height: 800)
 
     CropArea(image: image, cropShape: .circle, viewModel: viewModel, showsGrid: true)
+  }
+
+  #Preview("Right-to-left") {
+    @Previewable @State var viewModel = CropAreaViewModel()
+    @Previewable @State var image = previewImage(width: 800, height: 600)
+
+    CropArea(image: image, cropShape: .square, viewModel: viewModel)
+      .environment(\.layoutDirection, .rightToLeft)
   }
 #endif

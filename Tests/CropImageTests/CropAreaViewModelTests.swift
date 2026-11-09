@@ -207,20 +207,29 @@ struct CropAreaViewModelTests {
   }
 
   /// The crop shows what its `CropArea` shows in the crop region: zoomed, panned, for an
-  /// image turned by its orientation, and in a 402 pt wide area whose crop region is
-  /// 301.5 pt. Both are rendered at 4 pixels per point, where that region falls on whole
-  /// pixels. Resampling differences keep the mean difference per byte between 0.2 and
-  /// 1.5; a pan off by 10 pt gives 4.4 to 16.7, so the test allows under 3.
+  /// image turned by its orientation, in a 402 pt wide area whose crop region is
+  /// 301.5 pt, and in a right-to-left layout. Both are rendered at 4 pixels per point,
+  /// where that region falls on whole pixels. Resampling differences keep the mean
+  /// difference per byte between 0.2 and 1.5; a pan off by 10 pt gives 4.4 to 16.7, so
+  /// the test allows under 3.
   @Test func cropShowsWhatTheAreaShows() throws {
     let turnedImage = try UIImage(
       cgImage: #require(patternImage.cgImage), scale: 1, orientation: .right)
-    let framings: [(image: UIImage, areaSize: CGSize, scale: CGFloat, offset: CGSize)] = [
-      (patternImage, areaSize, 1, .zero),
-      (patternImage, areaSize, 1.7, CGSize(width: 40, height: -65)),
-      (patternImage, areaSize, 2.3, CGSize(width: -120, height: 90)),
-      (turnedImage, areaSize, 1.7, CGSize(width: 40, height: -65)),
-      (patternImage, CGSize(width: 402, height: 874), 1.7, CGSize(width: 40, height: -65)),
-    ]
+    let framings:
+      [(
+        image: UIImage, areaSize: CGSize, scale: CGFloat, offset: CGSize,
+        layoutDirection: LayoutDirection
+      )] = [
+        (patternImage, areaSize, 1, .zero, .leftToRight),
+        (patternImage, areaSize, 1.7, CGSize(width: 40, height: -65), .leftToRight),
+        (patternImage, areaSize, 2.3, CGSize(width: -120, height: 90), .leftToRight),
+        (turnedImage, areaSize, 1.7, CGSize(width: 40, height: -65), .leftToRight),
+        (
+          patternImage, CGSize(width: 402, height: 874), 1.7, CGSize(width: 40, height: -65),
+          .leftToRight
+        ),
+        (patternImage, areaSize, 1.7, CGSize(width: 40, height: -65), .rightToLeft),
+      ]
     let pixelsPerPoint: CGFloat = 4
     for framing in framings {
       let viewModel = viewModel(showing: framing.image, areaSize: framing.areaSize)
@@ -228,7 +237,8 @@ struct CropAreaViewModelTests {
       viewModel.offset = framing.offset
       let renderer = ImageRenderer(
         content: CropArea(image: framing.image, cropShape: .square, viewModel: viewModel)
-          .frame(width: framing.areaSize.width, height: framing.areaSize.height))
+          .frame(width: framing.areaSize.width, height: framing.areaSize.height)
+          .environment(\.layoutDirection, framing.layoutDirection))
       renderer.scale = pixelsPerPoint
       let cropSide = CropGeometry.cropSize(containerSize: framing.areaSize).width
       let cropRegion = CGRect(
@@ -249,7 +259,10 @@ struct CropAreaViewModelTests {
 
       #expect(
         meanDifference < 3,
-        "area \(framing.areaSize), zoom \(framing.scale), pan \(framing.offset)")
+        """
+        area \(framing.areaSize), zoom \(framing.scale), pan \(framing.offset), \
+        \(framing.layoutDirection)
+        """)
     }
   }
 
