@@ -36,8 +36,9 @@ under `docs/superpowers/`.
      not only dimensions: a renderer can return a correctly sized image that is blank or
      has a transparent edge.
    - *Per-task exception:* gestures, the mask, and layout have no unit-testable surface.
-     Say so in the task and verify in a `#Preview` or the demo app on the `with-demo`
-     branch, rather than writing a test that asserts nothing.
+     Say so in the task and verify in a `#Preview`, rather than writing a test that
+     asserts nothing. For a run in the Simulator, build a throwaway demo app outside the
+     repo against the local package, and delete it when the check is done.
 5. **Verify** (`superpowers:verification-before-completion`) — build and run the full test
    suite on an iOS simulator (commands in `CLAUDE.md`). Evidence before claims.
 6. **Code review** (`/code-review`), checked against the spec delta.

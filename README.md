@@ -209,12 +209,7 @@ CropImage/
 
 Add the package to your project (see [Installation](#-installation)), then present `CropImageView` or build your own screen around `CropArea` (see [Usage](#-usage)).
 
-A runnable example app is available on the [`with-demo`](https://github.com/quien697/CropImage/tree/with-demo) branch, demonstrating the full `PhotosPicker → CropImageView → result` flow:
-
-```bash
-git checkout with-demo
-open CropImageDemo/CropImageDemo.xcodeproj
-```
+To see it working, open the package in Xcode and look at the previews: `CropImageView.swift` shows the ready-made screen with each crop shape, and `CropArea.swift` shows a screen an app might build around `CropArea`.
 
 
 

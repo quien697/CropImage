@@ -8,7 +8,7 @@ CropImage is a SwiftUI Swift package (iOS 26+, Swift 6 language mode, swift-tool
 
 CropImage is cropping only: which part of the photo ends up in the crop, and the output image. Rotating or straightening would belong here; effects such as filters or background removal don't. An effect starts in the app that needs it and becomes its own library once a second app needs it.
 
-The demo app lives on the `with-demo` branch, not `main`. A local `CropImageDemo/` folder on `main` holds only git-ignored Xcode user data.
+There is no demo app, in the repo or on a branch: the `#Preview`s in `CropImageView.swift` and `CropArea.swift` show the views working.
 
 ## Development Workflow
 Features and non-trivial fixes follow the OpenSpec + Superpowers loop in
