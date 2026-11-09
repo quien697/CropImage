@@ -8,4 +8,4 @@
 
 - [x] 2.1 Build and run the full test suite on an iOS simulator
 - [x] 2.2 Code review against this change's spec delta
-- [ ] 2.3 Commit on `develop`, then archive this change
+- [x] 2.3 Commit on `develop`, then archive this change
