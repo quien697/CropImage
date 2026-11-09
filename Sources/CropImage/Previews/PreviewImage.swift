@@ -14,11 +14,13 @@
     let renderer = UIGraphicsImageRenderer(size: size)
     return renderer.image { ctx in
       let colors = [UIColor.systemBlue, UIColor.systemPurple, UIColor.systemPink]
-      let gradient = CGGradient(
-        colorsSpace: CGColorSpaceCreateDeviceRGB(),
-        colors: colors.map(\.cgColor) as CFArray,
-        locations: [0, 0.5, 1]
-      )!
+      guard
+        let gradient = CGGradient(
+          colorsSpace: CGColorSpaceCreateDeviceRGB(),
+          colors: colors.map(\.cgColor) as CFArray,
+          locations: [0, 0.5, 1]
+        )
+      else { return }
       ctx.cgContext.drawLinearGradient(
         gradient,
         start: .zero,
