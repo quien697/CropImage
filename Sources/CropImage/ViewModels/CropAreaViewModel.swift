@@ -1,7 +1,7 @@
 //
 //  CropAreaViewModel.swift
 //  CropImage
-// 
+//
 //  Created by Quien on 2026-06-01.
 //
 
