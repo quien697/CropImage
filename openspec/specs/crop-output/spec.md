@@ -35,6 +35,10 @@ circle is included.
 - **WHEN** the user confirms a `.circle` crop
 - **THEN** `onCrop` receives the full square around the circle, with no transparent corners
 
+#### Scenario: Right-to-left layout
+- **WHEN** the app's layout is right-to-left and the user has panned the image
+- **THEN** the cropped image shows what the crop region shows, panned the same way
+
 ### Requirement: Output Size
 When `outputSide` is `nil`, the cropped image SHALL be rendered at scale 1, so its `size`
 equals its pixel size, and its side SHALL be the crop region's side in points, rounded up
