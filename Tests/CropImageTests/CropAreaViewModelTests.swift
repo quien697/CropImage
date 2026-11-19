@@ -44,74 +44,86 @@ struct CropAreaViewModelTests {
   /// A 400 × 800 pt area has a 300 × 300 pt crop region.
   private let areaSize = CGSize(width: 400, height: 800)
 
-  /// Without `outputSide`, a whole-number crop region comes out at its size in points,
-  /// one pixel per point.
-  @Test func cropWithoutOutputSideIsTheCropSideAtScaleOne() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: areaSize).crop())
+  /// The crop has as many pixels as the source has under the crop region. The 1200 px
+  /// source fills the 400 × 800 pt area's 800 pt height, so the 300 pt crop region covers
+  /// 450 source pixels at zoom 1, 225 at twice that, the whole source zoomed out as far
+  /// as it goes, and 1 pixel at an extreme zoom.
+  @Test(arguments: [(1, 450), (2, 225), (0.01, 1200), (10000, 1)] as [(CGFloat, Int)])
+  func cropHasTheSourcePixelsTheCropRegionCovers(magnification: CGFloat, expectedSide: Int)
+    throws
+  {
+    let viewModel = viewModel(showing: sourceImage, areaSize: areaSize)
+    viewModel.pinchEnded(magnification: magnification)
+    let cropped = try #require(viewModel.crop())
     let cgImage = try #require(cropped.cgImage)
 
-    #expect(cgImage.width == 300)
-    #expect(cgImage.height == 300)
-  }
-
-  /// A crop region off whole points rounds up to whole pixels. A 407.2 pt wide area has a
-  /// 305.4 pt crop region starting 50.9 pt in; rounding both of its edges outward, as
-  /// 1.0.0 did, gave 307 px here.
-  @Test func cropWithoutOutputSideRoundsAFractionalSideUp() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: CGSize(width: 407.2, height: 874)).crop())
-    let cgImage = try #require(cropped.cgImage)
-
-    #expect(cgImage.width == 306)
-    #expect(cgImage.height == 306)
+    #expect(cgImage.width == expectedSide)
+    #expect(cgImage.height == expectedSide)
     #expect(cropped.scale == 1)
   }
 
-  /// A side rounded up from under half a pixel still fills its last row and column: a
-  /// 375 pt wide area's 281.25 pt crop region left them empty.
-  @Test func cropWithoutOutputSideFillsAFractionalSidesEdges() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: CGSize(width: 375, height: 667)).crop())
-    let cgImage = try #require(cropped.cgImage)
+  /// An iPhone 17 Pro's 301.5 pt crop region covers about 413.96 pixels of the 1200 px
+  /// source, which fills the 874 pt height; that rounds to 414, opaque to its edges.
+  @Test func cropRoundsToTheNearestSourcePixel() throws {
+    let cgImage = try #require(
+      viewModel(showing: sourceImage, areaSize: CGSize(width: 402, height: 874)).crop()?
+        .cgImage)
 
-    #expect(cgImage.width == 282)
-    #expect(cgImage.height == 282)
+    #expect(cgImage.width == 414)
+    #expect(cgImage.height == 414)
     #expect(try lowestAlpha(of: cgImage) == 255)
   }
 
-  /// With `outputSide`, the crop is exactly that many pixels on each side, at scale 1.
-  @Test func cropWithOutputSideIsThatManyPixelsSquare() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: areaSize).crop(outputSide: 840))
+  /// A 400 × 400 pt source at scale 3 has 1200 × 1200 pixels, and crops like the 1200 px
+  /// source at scale 1.
+  @Test func cropCountsTheSourcesPixelsNotItsPoints() throws {
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 3
+    let scaledImage = UIGraphicsImageRenderer(
+      size: CGSize(width: 400, height: 400), format: format
+    ).image { context in
+      UIColor.systemTeal.setFill()
+      context.fill(CGRect(x: 0, y: 0, width: 400, height: 400))
+    }
+    let cropped = try #require(viewModel(showing: scaledImage, areaSize: areaSize).crop())
     let cgImage = try #require(cropped.cgImage)
 
-    #expect(cgImage.width == 840)
-    #expect(cgImage.height == 840)
+    #expect(cgImage.width == 450)
+    #expect(cgImage.height == 450)
     #expect(cropped.scale == 1)
   }
 
-  /// An iPhone 17 Pro's crop: 0.75 of a 402 pt wide screen is a fractional side.
-  @Test func cropWithOutputSideIsExactOnAFractionalCropSide() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: CGSize(width: 402, height: 874))
-        .crop(outputSide: 840))
-    let cgImage = try #require(cropped.cgImage)
+  /// A checkerboard of single black and white pixels, zoomed and panned, crops to pure
+  /// black and white pixels that alternate as the source's do, so each one is a source
+  /// pixel copied as it is. Resampling blends neighbors into grays, and scaling repeats
+  /// pixels. The 600 px source fills 800 pt, so at zoom 1.7 and pan (40, −60) the crop
+  /// starts at source pixel (216, 260), which is black, and a crop off by one pixel
+  /// starts on white.
+  @Test func cropCopiesSourcePixelsWithoutResampling() throws {
+    let viewModel = viewModel(showing: try checkerboardImage(side: 600), areaSize: areaSize)
+    viewModel.scale = 1.7
+    viewModel.offset = CGSize(width: 40, height: -60)
+    let cgImage = try #require(viewModel.crop()?.cgImage)
+    let side = cgImage.width
+    let bytes = try colorSamples(of: cgImage, gridSide: side)
 
-    #expect(cgImage.width == 840)
-    #expect(cgImage.height == 840)
-  }
+    var mismatchedPixels = 0
+    for row in 0..<side {
+      for column in 0..<side {
+        let index = (row * side + column) * 4
+        let red = bytes[index]
+        let isPure = (red == 0 || red == 255) && bytes[index + 1] == red && bytes[index + 2] == red
+        let differsFromRight = column + 1 == side || bytes[index + 4] != red
+        let differsFromBelow = row + 1 == side || bytes[index + side * 4] != red
+        if !(isPure && differsFromRight && differsFromBelow) {
+          mismatchedPixels += 1
+        }
+      }
+    }
 
-  /// A fractional `outputSide` rounds up to whole pixels and fills them: 840.4 left the
-  /// last row and column of 841 empty.
-  @Test func cropWithAFractionalOutputSideRoundsUpAndFillsIt() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: areaSize).crop(outputSide: 840.4))
-    let cgImage = try #require(cropped.cgImage)
-
-    #expect(cgImage.width == 841)
-    #expect(cgImage.height == 841)
-    #expect(try lowestAlpha(of: cgImage) == 255)
+    #expect(side == 132)
+    #expect(bytes[0] == 0)
+    #expect(mismatchedPixels == 0)
   }
 
   /// Zoomed out as far as it goes, a square image just covers the crop region, and the
@@ -147,40 +159,6 @@ struct CropAreaViewModelTests {
     #expect(try lowestAlpha(of: cgImage) == 255)
   }
 
-  /// An iPad Pro 13-inch's crop: the side is capped at 400 pt inside a 1032 × 1376 pt
-  /// container. A large output must still contain the image, not come back blank.
-  @Test func cropWithALargeOutputSideOnAnIPadIsNotBlank() throws {
-    let cropped = try #require(
-      viewModel(showing: sourceImage, areaSize: CGSize(width: 1032, height: 1376))
-        .crop(outputSide: 4096))
-    let cgImage = try #require(cropped.cgImage)
-
-    #expect(cgImage.width == 4096)
-    #expect(cgImage.height == 4096)
-    #expect(centerAlpha(of: cgImage) == 255)
-  }
-
-  /// A zoomed and panned crop with `outputSide` shows the same part of the image as the
-  /// same crop without it. Antialiasing where squares meet keeps the mean difference per
-  /// byte under 1; a pan left unscaled with the output pushes it above 50.
-  @Test func cropWithOutputSideFramesTheSameContentAsWithout() throws {
-    let viewModel = viewModel(showing: patternImage, areaSize: areaSize)
-    viewModel.scale = 1.7
-    viewModel.offset = CGSize(width: 40, height: -65)
-
-    let withoutOutputSide = try #require(viewModel.crop()?.cgImage)
-    let withOutputSide = try #require(viewModel.crop(outputSide: 900)?.cgImage)
-
-    let samplesWithout = try colorSamples(of: withoutOutputSide, gridSide: 64)
-    let samplesWith = try colorSamples(of: withOutputSide, gridSide: 64)
-    let totalDifference = zip(samplesWithout, samplesWith).reduce(0) { total, pair in
-      total + abs(Int(pair.0) - Int(pair.1))
-    }
-    let meanDifference = Double(totalDifference) / Double(samplesWithout.count)
-
-    #expect(meanDifference < 10)
-  }
-
   /// A high dynamic range image keeps its highlights: a PQ image whose linear value is
   /// about 4.8 came out clipped to 1.
   @Test func cropKeepsHighDynamicRangeHighlights() throws {
@@ -208,10 +186,10 @@ struct CropAreaViewModelTests {
 
   /// The crop shows what its `CropArea` shows in the crop region: zoomed, panned, for an
   /// image turned by its orientation, in a 402 pt wide area whose crop region is
-  /// 301.5 pt, and in a right-to-left layout. Both are rendered at 4 pixels per point,
-  /// where that region falls on whole pixels. Resampling differences keep the mean
-  /// difference per byte between 0.2 and 1.5; a pan off by 10 pt gives 4.4 to 16.7, so
-  /// the test allows under 3.
+  /// 301.5 pt, and in a right-to-left layout. The area is rendered at 4 pixels per point,
+  /// where that region falls on whole pixels. The area's resampling and the crop's
+  /// snapping to whole source pixels keep the mean difference per byte between 0.5 and
+  /// 2.5; a pan off by 10 pt gives 3.8 to 14.2, so the test allows under 3.
   @Test func cropShowsWhatTheAreaShows() throws {
     let turnedImage = try UIImage(
       cgImage: #require(patternImage.cgImage), scale: 1, orientation: .right)
@@ -247,8 +225,7 @@ struct CropAreaViewModelTests {
         width: cropSide * pixelsPerPoint,
         height: cropSide * pixelsPerPoint)
       let shownRegion = try #require(renderer.cgImage?.cropping(to: cropRegion))
-      let cropped = try #require(
-        viewModel.crop(outputSide: cropSide * pixelsPerPoint)?.cgImage)
+      let cropped = try #require(viewModel.crop()?.cgImage)
 
       let samplesShown = try colorSamples(of: shownRegion, gridSide: 64)
       let samplesCropped = try colorSamples(of: cropped, gridSide: 64)
@@ -272,7 +249,6 @@ struct CropAreaViewModelTests {
     viewModel.areaSizeChanged(to: areaSize)
 
     #expect(viewModel.crop() == nil)
-    #expect(viewModel.crop(outputSide: 840) == nil)
   }
 
   /// An image without pixels, such as `UIImage()`, has nothing to crop.
@@ -280,7 +256,6 @@ struct CropAreaViewModelTests {
     let viewModel = viewModel(showing: UIImage(), areaSize: areaSize)
 
     #expect(viewModel.crop() == nil)
-    #expect(viewModel.crop(outputSide: 840) == nil)
   }
 
   /// Before its area appears, the view model doesn't know the area's size, so there is no
@@ -290,7 +265,6 @@ struct CropAreaViewModelTests {
     viewModel.imageChanged(to: sourceImage)
 
     #expect(viewModel.crop() == nil)
-    #expect(viewModel.crop(outputSide: 840) == nil)
   }
 
   /// A view model whose area is `areaSize` and shows `image`, as `CropArea` sets it up.
@@ -319,6 +293,33 @@ struct CropAreaViewModelTests {
       context.draw(image, in: CGRect(x: 0, y: 0, width: gridSide, height: gridSide))
     }
     return bytes
+  }
+
+  /// A `side` × `side` pixel image at scale 1 whose pixels alternate black and white, as
+  /// on a checkerboard.
+  private func checkerboardImage(side: Int) throws -> UIImage {
+    var bytes = [UInt8](repeating: 255, count: side * side * 4)
+    for row in 0..<side {
+      for column in 0..<side where (row + column) % 2 == 0 {
+        let index = (row * side + column) * 4
+        bytes[index] = 0
+        bytes[index + 1] = 0
+        bytes[index + 2] = 0
+      }
+    }
+    let cgImage = try bytes.withUnsafeMutableBytes { buffer in
+      let context = try #require(
+        CGContext(
+          data: buffer.baseAddress,
+          width: side,
+          height: side,
+          bitsPerComponent: 8,
+          bytesPerRow: side * 4,
+          space: CGColorSpaceCreateDeviceRGB(),
+          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+      return try #require(context.makeImage())
+    }
+    return UIImage(cgImage: cgImage)
   }
 
   /// The lowest alpha of any pixel in the square `image`; an empty row or column is 0.
@@ -377,28 +378,5 @@ struct CropAreaViewModelTests {
           height: CGFloat(image.height)))
     }
     return Array(components.prefix(3))
-  }
-
-  /// The alpha of the pixel at the center of `image`; a blank render is 0.
-  private func centerAlpha(of image: CGImage) -> UInt8 {
-    var pixel: [UInt8] = [0, 0, 0, 0]
-    pixel.withUnsafeMutableBytes { buffer in
-      let context = CGContext(
-        data: buffer.baseAddress,
-        width: 1,
-        height: 1,
-        bitsPerComponent: 8,
-        bytesPerRow: 4,
-        space: CGColorSpaceCreateDeviceRGB(),
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-      context?.draw(
-        image,
-        in: CGRect(
-          x: -CGFloat(image.width) / 2,
-          y: -CGFloat(image.height) / 2,
-          width: CGFloat(image.width),
-          height: CGFloat(image.height)))
-    }
-    return pixel[3]
   }
 }
