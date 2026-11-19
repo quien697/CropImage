@@ -13,19 +13,16 @@ import UIKit
 /// Confirm on the ready-made screen delivers one crop, however often it is tapped.
 @MainActor
 struct CropImageViewModelTests {
-  /// The first Confirm delivers the area's crop at the output side asked for.
+  /// The first Confirm delivers the area's crop.
   @Test func confirmDeliversTheAreasCrop() throws {
     let viewModel = viewModelShowingAnImage()
     var deliveredCrops: [UIImage?] = []
 
-    viewModel.confirm(outputSide: 840) { deliveredCrops.append($0) }
+    viewModel.confirm { deliveredCrops.append($0) }
 
     #expect(deliveredCrops.count == 1)
     let deliveredCrop = try #require(deliveredCrops.first ?? nil)
-    #expect(deliveredCrop.cgImage?.width == 840)
-    #expect(deliveredCrop.cgImage?.height == 840)
-    #expect(
-      deliveredCrop.pngData() == viewModel.areaViewModel.crop(outputSide: 840)?.pngData())
+    #expect(deliveredCrop.pngData() == viewModel.areaViewModel.crop()?.pngData())
   }
 
   /// Confirm is available once the area shows an image, and not after the first tap.
@@ -33,7 +30,7 @@ struct CropImageViewModelTests {
     let viewModel = viewModelShowingAnImage()
     #expect(viewModel.canConfirm)
 
-    viewModel.confirm(outputSide: nil) { _ in }
+    viewModel.confirm { _ in }
 
     #expect(!viewModel.canConfirm)
   }
@@ -61,8 +58,8 @@ struct CropImageViewModelTests {
     let viewModel = viewModelShowingAnImage()
     var callCount = 0
 
-    viewModel.confirm(outputSide: nil) { _ in callCount += 1 }
-    viewModel.confirm(outputSide: nil) { _ in callCount += 1 }
+    viewModel.confirm { _ in callCount += 1 }
+    viewModel.confirm { _ in callCount += 1 }
 
     #expect(callCount == 1)
   }
@@ -72,9 +69,9 @@ struct CropImageViewModelTests {
     let viewModel = viewModelShowingAnImage()
     var callCount = 0
 
-    viewModel.confirm(outputSide: nil) { _ in
+    viewModel.confirm { _ in
       callCount += 1
-      viewModel.confirm(outputSide: nil) { _ in callCount += 1 }
+      viewModel.confirm { _ in callCount += 1 }
     }
 
     #expect(callCount == 1)
