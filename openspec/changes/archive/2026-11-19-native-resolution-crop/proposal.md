@@ -36,8 +36,8 @@ CropImage should too. Once it does, `outputSide` is code no app needs, so it goe
 - Public API: **BREAKING**. Call sites that pass `outputSide` stop compiling, and every
   app gets crops at the source's resolution instead of the crop region's size in points,
   which for a large photo is a much larger image. An app that needs a fixed or smaller
-  size resizes the crop itself. The previous updates haven't reached any app, so this
-  ships as 1.2.0 rather than 2.0.0, by the owner's decision.
+  size resizes the crop itself. It ships as 2.0.0, so no app picks it up until it
+  moves to the new major version.
 - Code: `CropAreaViewModel.crop`, `CropImageViewModel.confirm`, `CropImageView.init`,
   the `CropArea` preview, and their documentation.
 - Tests: `CropAreaViewModelTests`, `CropImageViewModelTests`, `PublicAPITests`.

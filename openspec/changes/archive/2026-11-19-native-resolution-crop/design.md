@@ -9,7 +9,8 @@ photo: 302 px on an iPhone 17 Pro, 400 px on an iPad. The image is always resamp
 and the result looks blurry on high-resolution screens.
 
 `outputSide` (added in 1.1.0) and its 8192 px precondition, in `CropImageView.init` and
-`crop(outputSide:)`, go away with this change. No app needs them yet.
+`crop(outputSide:)`, go away with this change. An app that needs a fixed size resizes
+the crop itself.
 
 ## Goals / Non-Goals
 
@@ -79,11 +80,9 @@ and the result looks blurry on high-resolution screens.
   them.
 - [Snapping moves the crop by up to half a source pixel, which can be visible on a tiny
   source] → It is the least a crop on whole pixels can move. The spec allows it.
-- [**BREAKING** change shipped as a minor version (1.2.0)] → The owner decided this
-  because the previous updates haven't reached any app. An app that resolves CropImage
-  from 1.0.0 or 1.1.0 "up to next major" still picks up 1.2.0 automatically. If it
-  passes `outputSide`, it stops compiling. If it doesn't, it gets full-resolution crops
-  without any code change.
+- [**BREAKING** change: call sites that pass `outputSide` stop compiling, and every app
+  gets much larger crops] → It ships as 2.0.0. An app that resolves CropImage "up to
+  next major" from 1.0.0 or 1.1.0 stays on 1.x until it moves to 2.0.0 on purpose.
 
 ## Migration Plan
 

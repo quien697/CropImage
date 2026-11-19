@@ -59,7 +59,7 @@ Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/quien697/CropImage.git", from: "1.1.0")
+    .package(url: "https://github.com/quien697/CropImage.git", from: "2.0.0")
 ]
 ```
 
