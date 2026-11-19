@@ -24,9 +24,9 @@ CropImage should too. Once it does, `outputSide` is code no app needs, so it goe
 (none)
 
 ### Modified Capabilities
-- `crop-output`: Output Size becomes the source's full resolution, and Crop Content
-  allows its snapping to whole source pixels; Fixed Output Size and Output Size Limit
-  are removed; Confirm Delivers the Crop and Crop From the App's Own Screen no longer
+- `crop-output`: Full-Resolution Output replaces Output Size, and Crop Content allows
+  its snapping to whole source pixels; Fixed Output Size and Output Size Limit are
+  removed; Confirm Delivers the Crop and Crop From the App's Own Screen no longer
   mention `outputSide`.
 - `crop-interaction`: the Crop Area requirement's view model swap scenario calls
   `crop()` instead of `crop(outputSide:)`.

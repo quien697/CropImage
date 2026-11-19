@@ -144,7 +144,7 @@ a different view model SHALL pass it the area's size and image.
 
 #### Scenario: App swaps in a new view model
 - **WHEN** an app replaces the `CropAreaViewModel` passed to a `CropArea` that is on screen with a new one
-- **THEN** the image returns to the initial framing, and the new view model's `crop(outputSide:)` returns the framed image
+- **THEN** the image returns to the initial framing, and the new view model's `crop()` returns the framed image
 
 #### Scenario: Same framing as the ready-made screen
 - **WHEN** a `CropArea` and a `CropImageView` of the same size show the same image

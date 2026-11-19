@@ -26,7 +26,7 @@ called again for as long as the view stays on screen.
 ### Requirement: Crop Content
 The cropped image SHALL contain what is inside the crop region as the user framed it at
 the moment of confirming, including their pan and zoom, to the nearest whole source
-pixel as the Output Size requirement describes. The image SHALL be square for every
+pixel as the Full-Resolution Output requirement describes. The image SHALL be square for every
 `cropShape`: a `.circle` crop is not masked, so the area outside the circle is included.
 
 #### Scenario: Circle crop output
@@ -37,7 +37,36 @@ pixel as the Output Size requirement describes. The image SHALL be square for ev
 - **WHEN** the app's layout is right-to-left and the user has panned the image
 - **THEN** the cropped image shows what the crop region shows, panned the same way
 
-### Requirement: Output Size
+### Requirement: Crop From the App's Own Screen
+`CropAreaViewModel.crop()` SHALL return the image its `CropArea` frames, as described by
+the Crop Content and Full-Resolution Output requirements. It SHALL use the zoom and pan as of the
+last finished gesture, and SHALL NOT dismiss or change anything on screen. It SHALL
+return `nil` when the area has no image, its image has no pixels, it has not appeared
+yet, or rendering fails.
+
+#### Scenario: App's own Confirm button
+- **WHEN** the user has framed an image in a `CropArea` and the app calls `crop()`
+- **THEN** it returns the framed region at the source image's full resolution, and the `CropArea` stays on screen with the same framing
+
+#### Scenario: Same output as the ready-made screen
+- **WHEN** a `CropArea` and a `CropImageView` of the same size show the same image with the same zoom and pan
+- **THEN** `crop()` and `onCrop` deliver the same image
+
+#### Scenario: No image
+- **WHEN** the `CropArea`'s image is `nil`
+- **THEN** `crop()` returns `nil`
+
+#### Scenario: Image without pixels
+- **WHEN** the `CropArea`'s image has no pixels, such as `UIImage()`
+- **THEN** `crop()` returns `nil`
+
+#### Scenario: Before the area appears
+- **WHEN** the app calls `crop()` before its `CropArea` has appeared
+- **THEN** it returns `nil`
+
+## ADDED Requirements
+
+### Requirement: Full-Resolution Output
 The cropped image SHALL be the source image at its full resolution: exactly the source
 pixels the crop region covers, each copied to one pixel of the output without
 resampling. It SHALL be rendered at scale 1, so its `size` equals its pixel size, and
@@ -76,34 +105,14 @@ from the source image.
 - **WHEN** the image is zoomed in so far that the crop region covers less than half a source pixel
 - **THEN** the cropped image is 1 × 1 pixel at scale 1
 
-### Requirement: Crop From the App's Own Screen
-`CropAreaViewModel.crop()` SHALL return the image its `CropArea` frames, as described by
-the Crop Content and Output Size requirements. It SHALL use the zoom and pan as of the
-last finished gesture, and SHALL NOT dismiss or change anything on screen. It SHALL
-return `nil` when the area has no image, its image has no pixels, it has not appeared
-yet, or rendering fails.
-
-#### Scenario: App's own Confirm button
-- **WHEN** the user has framed an image in a `CropArea` and the app calls `crop()`
-- **THEN** it returns the framed region at the source image's full resolution, and the `CropArea` stays on screen with the same framing
-
-#### Scenario: Same output as the ready-made screen
-- **WHEN** a `CropArea` and a `CropImageView` of the same size show the same image with the same zoom and pan
-- **THEN** `crop()` and `onCrop` deliver the same image
-
-#### Scenario: No image
-- **WHEN** the `CropArea`'s image is `nil`
-- **THEN** `crop()` returns `nil`
-
-#### Scenario: Image without pixels
-- **WHEN** the `CropArea`'s image has no pixels, such as `UIImage()`
-- **THEN** `crop()` returns `nil`
-
-#### Scenario: Before the area appears
-- **WHEN** the app calls `crop()` before its `CropArea` has appeared
-- **THEN** it returns `nil`
-
 ## REMOVED Requirements
+
+### Requirement: Output Size
+**Reason**: Replaced by Full-Resolution Output. The cropped image is no longer the crop
+region's size in points but the source pixels the crop region covers, so none of its
+scenarios still hold.
+**Migration**: None at call sites; `onCrop` and `crop()` deliver larger images, which an
+app that needs a fixed or smaller size resizes itself.
 
 ### Requirement: Fixed Output Size
 **Reason**: The crop is always the source image's full resolution, as in Apple's Photos

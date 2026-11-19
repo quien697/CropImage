@@ -39,5 +39,5 @@
 
 - [x] 5.1 Build and run the full test suite on an iOS simulator
 - [x] 5.2 Code review against this change's spec delta
-- [ ] 5.3 Commit on `feature/native-resolution-crop`, archive this change, and rewrite the `crop-output` spec's Purpose, which still names `outputSide` and the 8192 limit
+- [x] 5.3 Commit on `feature/native-resolution-crop`, archive this change, and rewrite the `crop-output` spec's Purpose, which still names `outputSide` and the 8192 limit
 - [ ] 5.4 Open a PR into `develop`
