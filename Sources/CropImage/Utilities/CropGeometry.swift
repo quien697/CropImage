@@ -54,4 +54,29 @@ enum CropGeometry {
       height: min(maxY, max(-maxY, offset.height))
     )
   }
+
+  /// The square of source pixels the crop region covers, for an image of
+  /// `imagePixelSize` whole pixels rendered at `renderedSize`, zoomed by `scale` and
+  /// panned by `offset`. It is snapped to whole pixels, at least 1 pixel wide, and kept
+  /// inside the source.
+  static func sourcePixelCropRect(
+    imagePixelSize: CGSize,
+    renderedSize: CGSize,
+    scale: CGFloat,
+    offset: CGSize,
+    cropSize: CGSize
+  ) -> CGRect {
+    let pixelsPerPoint = imagePixelSize.width / (renderedSize.width * scale)
+    let shorterSide = min(imagePixelSize.width, imagePixelSize.height)
+    let side = min(max(1, (cropSize.width * pixelsPerPoint).rounded()), shorterSide)
+    let x = ((renderedSize.width * scale - cropSize.width) / 2 - offset.width) * pixelsPerPoint
+    let y =
+      ((renderedSize.height * scale - cropSize.height) / 2 - offset.height) * pixelsPerPoint
+    return CGRect(
+      x: min(max(0, x.rounded()), imagePixelSize.width - side),
+      y: min(max(0, y.rounded()), imagePixelSize.height - side),
+      width: side,
+      height: side
+    )
+  }
 }

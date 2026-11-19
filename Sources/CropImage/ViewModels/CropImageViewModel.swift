@@ -23,9 +23,9 @@ final class CropImageViewModel {
 
   /// Calls `onCrop` with the crop the first time Confirm is tapped, and does nothing
   /// after that.
-  func confirm(outputSide: CGFloat?, onCrop: (UIImage?) -> Void) {
+  func confirm(onCrop: (UIImage?) -> Void) {
     guard !isConfirmed else { return }
     isConfirmed = true
-    onCrop(areaViewModel.crop(outputSide: outputSide))
+    onCrop(areaViewModel.crop())
   }
 }

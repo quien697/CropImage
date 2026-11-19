@@ -11,8 +11,7 @@ import SwiftUI
 /// filling the space you give it.
 ///
 /// Build your own crop screen around it: keep a `CropAreaViewModel` in that screen's
-/// `@State`, pass it in, and call its `crop(outputSide:)` and `reset()` from your own
-/// buttons.
+/// `@State`, pass it in, and call its `crop()` and `reset()` from your own buttons.
 public struct CropArea: View {
   // MARK: - State
   @GestureState(resetTransaction: Transaction(animation: .cropSettle))
@@ -139,7 +138,7 @@ public struct CropArea: View {
           }  // ToolbarItem
           ToolbarItem(placement: .confirmationAction) {
             Button(role: .confirm) {
-              if let framedImage = viewModel.crop(outputSide: 840) {
+              if let framedImage = viewModel.crop() {
                 onFramed(framedImage)
               }
               dismiss()

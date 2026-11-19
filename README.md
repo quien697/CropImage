@@ -21,7 +21,7 @@ A lightweight SwiftUI view for interactively cropping images on iOS.
 1. **Pan & zoom** — drag and pinch to position the image within the crop region.
 2. **Crop shapes** — choose between a circle or a square mask.
 3. **Edge clamping** — the image snaps back so the crop region is always filled.
-4. **Fixed output size** — optionally get the crop at an exact pixel size with `outputSide`.
+4. **Full resolution** — the crop keeps every source pixel the crop region covers, as Photos does.
 5. **Ready-made screen** — `CropImageView` with your own title and an `onCrop` callback.
 6. **Building blocks** — build your own crop screen from `CropArea` and `CropAreaViewModel`, with an optional thirds grid.
 
@@ -73,7 +73,7 @@ There are two ways to use CropImage:
 |---|---|---|
 | What it is | A ready-made crop screen | A crop component inside a screen you build |
 | What it includes | Navigation bar, title, close and Confirm buttons | The image with pan and zoom, the dimmed surround and the crop shape, plus an optional thirds grid |
-| How you get the image | The `onCrop` closure | `crop(outputSide:)` on the view model, called from your own button |
+| How you get the image | The `onCrop` closure | `crop()` on the view model, called from your own button |
 | Use it when | A sheet with a title and Confirm is enough | You need your own navigation (such as a push), buttons, hints, a Reset button or the grid |
 
 Both have the same crop region, pan and zoom, and give the same output. The cropped image is always square: a `.circle` crop isn't masked, so clip it to a circle where you display it.
@@ -113,13 +113,7 @@ struct ContentView: View {
 }
 ```
 
-By default the cropped image is the crop region's size in points, rendered at scale 1. Pass `outputSide` to get a fixed size in pixels instead (up to 8192), for example a 1024 × 1024 square:
-
-```swift
-CropImageView(image: sourceImage, cropShape: .square, outputSide: 1024) { result in
-    croppedImage = result
-}
-```
+The cropped image is the source at its full resolution: exactly the source pixels the crop region covers, copied as they are, at scale 1. Zooming in covers fewer source pixels, so it gives a smaller image, as in Photos. A large photo gives a large crop: zoomed out, a 48 MP photo gives a 6048 × 6048 pixel square. If you upload or store crops, resize them to the size you need.
 
 The title defaults to "Crop your photo". Pass your own `title`; like any SwiftUI title, it's looked up in your app's strings:
 
@@ -131,7 +125,7 @@ CropImageView(image: sourceImage, cropShape: .square, title: "Frame your photo")
 
 ### 2. Your own screen: `CropArea` and `CropAreaViewModel`
 
-Put a `CropArea` in a screen you build. It fills the space you give it and has no navigation bar of its own, so you can push the screen onto your navigation stack, or present it in a sheet inside your own `NavigationStack`. Keep a `CropAreaViewModel` in that screen's `@State`, one per area, pass it to the `CropArea`, and call it from your buttons: `crop(outputSide:)` returns the cropped image (or `nil` if there is no image yet or rendering fails), and `reset()` returns to the initial framing. Without `outputSide`, the image is the crop region's size in points, as with `CropImageView`.
+Put a `CropArea` in a screen you build. It fills the space you give it and has no navigation bar of its own, so you can push the screen onto your navigation stack, or present it in a sheet inside your own `NavigationStack`. Keep a `CropAreaViewModel` in that screen's `@State`, one per area, pass it to the `CropArea`, and call it from your buttons: `crop()` returns the cropped image at full resolution, as `CropImageView` delivers it (or `nil` if there is no image yet or rendering fails), and `reset()` returns to the initial framing.
 
 The framing belongs to the view model, so a view model kept in the screen's state starts each visit at the initial framing and releases the photo with the screen. Set `showsGrid` to draw lines that divide the crop region into thirds; they are never part of the cropped image.
 
@@ -154,7 +148,7 @@ struct FramePhotoView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) {
-                        if let framed = viewModel.crop(outputSide: 840) {
+                        if let framed = viewModel.crop() {
                             onFramed(framed)
                         }
                         dismiss()

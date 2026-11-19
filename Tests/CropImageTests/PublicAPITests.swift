@@ -22,6 +22,6 @@ struct PublicAPITests {
 
     viewModel.reset()
 
-    #expect(viewModel.crop(outputSide: 840) == nil)
+    #expect(viewModel.crop() == nil)
   }
 }

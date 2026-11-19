@@ -10,10 +10,10 @@ import SwiftUI
 /// The view model of a `CropArea`, which an app holds to crop and reset it.
 ///
 /// Keep one in the `@State` of the screen that shows its `CropArea`, and pass it to the
-/// area. Call `crop(outputSide:)` from your confirm button and `reset()` from a reset
-/// button. The framing belongs to the view model, so a view model kept in the screen's
-/// state starts each visit at the initial framing and lets go of the image with the
-/// screen. A gesture in progress stays in the area until it ends.
+/// area. Call `crop()` from your confirm button and `reset()` from a reset button. The
+/// framing belongs to the view model, so a view model kept in the screen's state starts
+/// each visit at the initial framing and lets go of the image with the screen. A gesture
+/// in progress stays in the area until it ends.
 @MainActor
 @Observable
 public final class CropAreaViewModel {
@@ -127,55 +127,44 @@ public final class CropAreaViewModel {
 
   /// The image inside the crop region, framed as the user left it at the end of their
   /// last gesture, or `nil` if there is no image, the image has no pixels, the area
-  /// hasn't appeared yet, or rendering fails.
-  ///
-  /// - Parameter outputSide: The side length, in pixels, of the square image returned,
-  ///   greater than 0 and at most 8192; a fraction rounds up. If the framed area has
-  ///   fewer source pixels, it is upscaled. When `nil`, the image is the crop region's
-  ///   size in points, rounded up to whole pixels, at scale 1.
-  public func crop(outputSide: CGFloat? = nil) -> UIImage? {
-    if let outputSide {
-      precondition(
-        outputSide > 0 && outputSide <= 8192,
-        "outputSide must be greater than 0 and at most 8192 pixels")
-    }
+  /// hasn't appeared yet, or rendering fails. The image is the source at its full
+  /// resolution: the source pixels the crop region covers, copied as they are, at
+  /// scale 1. Zooming in covers fewer source pixels, so it gives a smaller image.
+  public func crop() -> UIImage? {
     guard let image, areaSize.width > 0, areaSize.height > 0 else { return nil }
-    let cropSize = CropGeometry.cropSize(containerSize: areaSize)
 
-    // Draw the image where `CropArea` shows it: at its `scaledToFill` size times the
-    // zoom, centered on the crop region's center plus the pan. The output side is
-    // `outputSide`, or else the crop region's side, rounded up to whole pixels, and
-    // everything is scaled to it. Laying the image out with SwiftUI instead rounds its
-    // frame to whole pixels before zoom and pan apply, which leaves a faint edge where
-    // the image's edge meets the crop's, and ImageRenderer clips HDR highlights.
-    let renderSide = (outputSide ?? cropSize.width).rounded(.up)
-    let outputScale = renderSide / cropSize.width
-    let rendered = renderedSize(imageSize: image.size, in: areaSize)
-    let drawnSize = CGSize(
-      width: rendered.width * scale * outputScale,
-      height: rendered.height * scale * outputScale
+    // Copy the source pixels the crop region covers where `CropArea` shows it: the image
+    // at its `scaledToFill` size times the zoom, centered on the crop region's center
+    // plus the pan. The whole image is drawn at its own pixel size, moved by whole pixels
+    // so the crop's corner is the output's, which copies each pixel without resampling.
+    // Laying the image out with SwiftUI instead rounds its frame to whole pixels before
+    // zoom and pan apply, which leaves a faint edge where the image's edge meets the
+    // crop's, and ImageRenderer clips HDR highlights.
+    let imagePixelSize = CGSize(
+      width: (image.size.width * image.scale).rounded(),
+      height: (image.size.height * image.scale).rounded()
     )
-    let drawnCenter = CGPoint(
-      x: (cropSize.width / 2 + offset.width) * outputScale,
-      y: (cropSize.height / 2 + offset.height) * outputScale
+    let cropRect = CropGeometry.sourcePixelCropRect(
+      imagePixelSize: imagePixelSize,
+      renderedSize: renderedSize(imageSize: image.size, in: areaSize),
+      scale: scale,
+      offset: offset,
+      cropSize: CropGeometry.cropSize(containerSize: areaSize)
     )
     // The image's own format keeps its colors, wide color and HDR highlights included.
     // Crops keep an alpha channel even when the image has none, as they always had.
     let format = image.imageRendererFormat
     format.scale = 1
     format.opaque = false
-    return UIGraphicsImageRenderer(
-      size: CGSize(width: renderSide, height: renderSide),
-      format: format
-    ).image { context in
-      context.cgContext.interpolationQuality = .high
+    return UIGraphicsImageRenderer(size: cropRect.size, format: format).image { context in
+      context.cgContext.interpolationQuality = .none
       // `UIImage.draw` applies the image's orientation, as `Image(uiImage:)` does.
       image.draw(
         in: CGRect(
-          x: drawnCenter.x - drawnSize.width / 2,
-          y: drawnCenter.y - drawnSize.height / 2,
-          width: drawnSize.width,
-          height: drawnSize.height
+          x: -cropRect.minX,
+          y: -cropRect.minY,
+          width: imagePixelSize.width,
+          height: imagePixelSize.height
         )
       )
     }
