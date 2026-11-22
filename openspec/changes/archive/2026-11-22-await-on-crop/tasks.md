@@ -26,5 +26,5 @@
 - [x] 5.2 Code review against this change's spec delta
 - [x] 5.2.1 From the review: keep the lock after `onCrop` returns, so progress stays while the sheet closes; fix the README example so every thrown error gets a message; say that a `nonisolated` async `onCrop` runs with its own isolation; add a time limit to the gated test; add a characterization test that a stored synchronous `onCrop` runs on the main thread
 - [x] 5.2.2 From the second review: test that a synchronous `onCrop` closure still calls an app's synchronous overload, check that Confirm after `onCrop` returns does nothing, rewrap the `onCrop` documentation, and record in `design.md` the risks left as they are (an image swapped while `onCrop` runs, VoiceOver focus on the progress indicator)
-- [ ] 5.3 Commit on `feature/await-on-crop`, then archive this change
+- [x] 5.3 Commit on `feature/await-on-crop`, then archive this change
 - [ ] 5.4 Open a PR into `develop`
