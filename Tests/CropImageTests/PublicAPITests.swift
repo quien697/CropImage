@@ -24,4 +24,30 @@ struct PublicAPITests {
 
     #expect(viewModel.crop() == nil)
   }
+
+  /// `onCrop` takes a stored synchronous function, as well as an async closure that throws
+  /// to keep the screen open and updates the app's main-actor state without `await`.
+  @Test func onCropTakesSynchronousAndAsyncThrowingClosures() {
+    let viewModel = CropAreaViewModel()
+    let storedOnCrop: (UIImage?) -> Void = { _ in }
+    _ = CropImageView(image: nil, cropShape: .square, onCrop: storedOnCrop)
+    _ = CropImageView(image: nil, cropShape: .square) { _ in
+      try await Task.sleep(for: .milliseconds(1))
+      viewModel.reset()
+    }
+  }
+
+  /// A synchronous `onCrop` closure stays synchronous, so a function the app also has an
+  /// async version of still resolves to the synchronous one, without `await`.
+  @Test func synchronousOnCropKeepsCallingSynchronousOverloads() {
+    _ = CropImageView(image: nil, cropShape: .square) { croppedImage in
+      saveCrop(croppedImage)
+    }
+  }
 }
+
+/// An app's function with a synchronous and an async version.
+private func saveCrop(_ image: UIImage?) {}
+
+/// The async version of `saveCrop`, which a synchronous `onCrop` must not pick.
+private func saveCrop(_ image: UIImage?) async {}

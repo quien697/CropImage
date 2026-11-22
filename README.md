@@ -22,7 +22,7 @@ A lightweight SwiftUI view for interactively cropping images on iOS.
 2. **Crop shapes** — choose between a circle or a square mask.
 3. **Edge clamping** — the image snaps back so the crop region is always filled.
 4. **Full resolution** — the crop keeps every source pixel the crop region covers, as Photos does.
-5. **Ready-made screen** — `CropImageView` with your own title and an `onCrop` callback.
+5. **Ready-made screen** — `CropImageView` with your own title and an `onCrop` callback, which can check or upload the crop before the screen closes.
 6. **Building blocks** — build your own crop screen from `CropArea` and `CropAreaViewModel`, with an optional thirds grid.
 
 
@@ -123,6 +123,23 @@ CropImageView(image: sourceImage, cropShape: .square, title: "Frame your photo")
 }
 ```
 
+`onCrop` can be `async` and can throw, and the screen stays open until it returns, so you can check, encode or upload the crop first. While it runs, Confirm shows a progress indicator, and the user can't close the screen or move the image. Throw to refuse the crop: the screen stays open with the same framing, so the user can zoom in and confirm again, or close. CropImage shows no message of its own, so show yours for every error you throw: attach your alert to `CropImageView` and it appears over the crop screen. `onCrop` must finish, so give work that waits on the network its own timeout.
+
+```swift
+.sheet(isPresented: $isCropping) {
+    CropImageView(image: sourceImage, cropShape: .square) { result in
+        do {
+            try await upload(result)  // Your own check and upload, which throw.
+            croppedImage = result
+        } catch {
+            uploadError = error  // Show your own error UI for every error you throw.
+            throw error          // The crop screen stays open.
+        }
+    }
+    // Your alert or sheet for `uploadError`, attached here, appears over the crop screen.
+}
+```
+
 ### 2. Your own screen: `CropArea` and `CropAreaViewModel`
 
 Put a `CropArea` in a screen you build. It fills the space you give it and has no navigation bar of its own, so you can push the screen onto your navigation stack, or present it in a sheet inside your own `NavigationStack`. Keep a `CropAreaViewModel` in that screen's `@State`, one per area, pass it to the `CropArea`, and call it from your buttons: `crop()` returns the cropped image at full resolution, as `CropImageView` delivers it (or `nil` if there is no image yet or rendering fails), and `reset()` returns to the initial framing.
@@ -203,7 +220,7 @@ CropImage/
 
 Add the package to your project (see [Installation](#-installation)), then present `CropImageView` or build your own screen around `CropArea` (see [Usage](#-usage)).
 
-To see it working, open the package in Xcode and look at the previews: `CropImageView.swift` shows the ready-made screen with each crop shape, and `CropArea.swift` shows a screen an app might build around `CropArea`.
+To see it working, open the package in Xcode and look at the previews: `CropImageView.swift` shows the ready-made screen with each crop shape, and with an `onCrop` that takes a moment or refuses the crop, and `CropArea.swift` shows a screen an app might build around `CropArea`.
 
 
 
