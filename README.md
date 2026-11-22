@@ -55,11 +55,11 @@ Add the package in Xcode via **File → Add Package Dependencies…** and enter 
 https://github.com/quien697/CropImage.git
 ```
 
-Or add it to your `Package.swift`:
+Or add it to your `Package.swift`, with the latest version from the [repository's tags](https://github.com/quien697/CropImage/tags):
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/quien697/CropImage.git", from: "2.0.1")
+    .package(url: "https://github.com/quien697/CropImage.git", from: "<latest version>")
 ]
 ```
 
